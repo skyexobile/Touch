@@ -23,21 +23,11 @@ def read_beanInput():
     #output results to console
     return int(input_value)
 
-
+'''
 print("Connecting to Load Cell")
 input_serial = serial.Serial('/dev/cu.usbmodem1421')
 input_serial.setBaudrate(38400)
-'''
-print("Connecting to Touch Output")
-output_serial = serial.Serial('/dev/cu.usbmodem1421')
-output_serial.setBaudrate(115200)
 
-output_serial.setDTR(False)
-output_serial.setRTS(False)
-time.sleep(2.0)
-data = {'SubID': "0", 'Cond': "0",'Input_Time': "0", 'Input_Value': "0", 'Output_Time': "0", 'Output_Value': "0", 'Elapsed_Time': "0", 'Duration': "0"}
-
-'''
 #calibration with squeeze device
 def calibrate():
     Bean_serial.flushInput()
@@ -76,15 +66,15 @@ def calibrate():
         print('read input is ', r, 'gram input is', g, 'stop is ', stop)
 
 #Get data from input device ---------------------------------------
-'''
+
 
 def read_input():
     global timeBegin
     global flag
     global inputTime
-    output_serial.flushInput()
+    input_serial.flushInput()
     global input_value
-    input_value = str(output_serial.readline().decode())
+    input_value = str(input_serial.readline().decode())
     lc = time.time()
     lc_time = time.strftime("%H:%M:%S", time.localtime(lc))
     if (input_value  == ' ' or input_value == '\0'):
@@ -106,8 +96,8 @@ def read_input():
             for key in data.keys():
                 myFile.write(str(data[key])+",")
             flag = False
-        print("read: ")
-        print(input_value)
+        print("Time:", lc_time)
+        print("Reading:", input_value)
 
 def soft_pulse():
     then = int(strftime('%S'))
@@ -266,7 +256,7 @@ E1.pack()
 E2.pack()
 E3.pack()
 submit.pack(side = tk.BOTTOM)
-root.update()
+#root.update()
 
 myFile = open(path, 'a')
 myFile.write(str(time.strftime("%X")))
@@ -277,5 +267,3 @@ timeBegin = time.time()
 while True:
 
     read_input()
-
-    root.update()
