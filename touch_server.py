@@ -1,68 +1,93 @@
-# Tcp Chat server
+# Python program to implement server side of chat room.
+import socket
+import select
+import sys
+import thread
+import datetime
+import time
+import math
+server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
-import socket, select
+# checks whether sufficient arguments have been provided
 
-#Function to broadcast chat messages to all connected clients
-def broadcast_data (sock, message):
-    #Do not send the message to master socket and the client who has send us the message
-    for socket in CONNECTION_LIST:
-        if socket != server_socket and socket != sock :
-            try :
-                socket.send(message.encode())
-            except :
-                # broken socket connection may be, chat client pressed ctrl+c for example
-                socket.close()
-                CONNECTION_LIST.remove(socket)
+# takes the first argument from command prompt as IP address
+#IP_address = str(sys.argv[1])
 
-if __name__ == "__main__":
-    
-    # List to keep track of socket descriptors
-    CONNECTION_LIST = []
-    RECV_BUFFER = 4096 # Advisable to keep it as an exponent of 2
-    PORT = 5000
-    
-    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    # this has no effect, why ?
-    server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    server_socket.bind(("0.0.0.0", PORT))
-    server_socket.listen(10)
-    
-    # Add server socket to the list of readable connections
-    CONNECTION_LIST.append(server_socket)
-    
-    print("Server started on port " + str(PORT))
-    
-    while 1:
-        # Get the list sockets which are ready to be read through select
-        read_sockets,write_sockets,error_sockets = select.select(CONNECTION_LIST,[],[])
-        
-        for sock in read_sockets:
-            #New connection
-            if sock == server_socket:
-                # Handle the case in which there is a new connection recieved through server_socket
-                sockfd, addr = server_socket.accept()
-                CONNECTION_LIST.append(sockfd)
-                print("<Client (%s, %s) connected>" % addr)
-                
-                broadcast_data(sockfd, "<[%s:%s] entered room>\n" % addr)
-        
-            #Some incoming message from a client
-            else:
-                # Data recieved from client, process it
-                try:
-                    #In Windows, sometimes when a TCP program closes abruptly,
-                    # a "Connection reset by peer" exception will be thrown
-                    data = sock.recv(RECV_BUFFER)
-                    if data:
-                        print
-                        broadcast_data(sock, '<' + str(sock.getpeername()) + '>' + data.decode())
-                
-                except Exception as e:
-                    print(e)
-                    broadcast_data(sock, "<Client (%s, %s) is offline>" % addr)
-                    print("Client (%s, %s) is offline" % addr)
-                    sock.close()
-                    CONNECTION_LIST.remove(sock)
-                    continue
+# takes second argument from command prompt as port number
+#Port = int(sys.argv[2])
 
-server_socket.close()
+"""
+binds the server to an entered IP address and at the
+specified port number.
+The client must be aware of these parameters
+"""
+server.bind(("127.0.0.1", 5000))
+
+"""
+listens for 100 active connections. This number can be
+increased as per convenience.
+"""
+server.listen(100)
+start_time = time.time()
+list_of_clients = []
+clientID = -1
+
+def clientthread(conn, addr):
+
+    while True:
+            try:
+                message = conn.recv(2048)
+
+                if message:
+                    end = time.time()
+                    elapsed = (end - start_time)
+                    cData = str(message)  + ","+ str(elapsed) + '\n'
+                    broadcast(str(addr), conn)
+                    message_to_send = cData
+                    broadcast(message_to_send, conn)
+
+                else:
+                    """message may have no content if the connection
+                    is broken, in this case we remove the connection"""
+                    remove(conn)
+
+            except:
+                continue
+
+"""broadcast the message to all clients who's object is not the same as the one sending
+the message """
+def broadcast(message, connection):
+    for clients in list_of_clients:
+        if clients!=connection:
+            try:
+                clients.send(message.encode())
+            except:
+                clients.close()
+
+                # if the link is broken
+                remove(clients)
+
+""" removes the objectfrom the list that was created at the beginning of
+the program"""
+def remove(connection):
+    if connection in list_of_clients:
+        list_of_clients.remove(connection)
+MetaData = False
+while True:
+
+    clientID+=1
+    conn, addr = server.accept()
+    #flag here
+    if (MetaData is False):
+        list_of_clients.append(conn)
+        MetaData = True
+
+    # prints the address of the user that just connected
+    #print (str(clientID) + " connected")
+
+    # creates and individual thread for every user that connects
+    thread.start_new_thread(clientthread,(conn,clientID))
+
+conn.close()
+server.close()
