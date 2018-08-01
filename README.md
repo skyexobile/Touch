@@ -1,8 +1,12 @@
 # Touch
 
-OutputTest.py is current code for Touch Media project. Requires devices plugged in.
+InputTest.py records all touch data up to the release and sends to TServer.py.
+  Once a release is detected, it will try to recalibrate
+metadata.py writes data form server into a CSV file
 
-touch_input.py is simple program that records input force and sends it to the server. Comes with a "calibrate" button to reset sensor back to 0. 
+OutputTest.py is expecting input value and will squeeze accordingly.
+InputOutputTest.py is a program that contains input and output stuff.
+
 
 Other programs will need to ping touch_server with its data.
 
