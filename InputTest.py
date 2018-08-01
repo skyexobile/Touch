@@ -19,17 +19,31 @@ label1 = tk.Label(root, text = "Calibration")
 
 
 def getCali():
-    input_serial.write(str("9").encode())
+    input_serial.write(str("0").encode())
 B =  tk.Button(root, text = "Calibrate", command = getCali)
 
 B.pack(side = tk.BOTTOM)
 root.update()
+aquired_flag = False
+previous_read = -5000
 while True:
-
-    input_value = (input_serial.readline().decode())
-    message = str(input_value)
-    message= message.replace("\n", "")
-    server.send(message.encode())
+    if not acquired_flag:
+        value = (input_serial.readline().decode())
+        input_value = float(value)
+        if input_value >= previous_read:
+            message = str(input_value)
+            message= message.replace("\n", "")
+            previous_read = input_value
+        else:
+            acquired_flag = True
+            message = "0"
+            while(acquired_flag and input_value >= 30):
+                value = (input_serial.readline().decode())
+                input_value = float(value
+                input_serial.write(str("0").encode())
+            print('ready')
+            acquired_flag = false
+        server.send(message.encode())
     root.update()
 
 server.close()

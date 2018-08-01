@@ -74,13 +74,7 @@ while True:
     elif(acquired_flag and (previous_read-15)> input_value):
         output_serial.write(str(0).encode())
         output_serial.readline().decode()
-        #print(time.time())
-        while(input_value >=30):
-            value = (input_serial.readline().decode())
-            input_value = float(value)
-
-        input_serial.write(str(0).encode())
-        print('ready')
+        
         acquired_flag = False
     previous_read = input_value
     root.update()
