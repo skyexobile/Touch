@@ -4,8 +4,8 @@ from time import gmtime, strftime
 import socket
 import tkinter as tk
 
-#input_serial = serial.Serial('/dev/cu.usbmodem1421')
-#input_serial.setBaudrate(115200)
+input_serial = serial.Serial('/dev/cu.usbmodem1411')
+input_serial.setBaudrate(115200)
 print("Connected to Sensor")
 '''
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -26,8 +26,9 @@ B.pack(side = tk.BOTTOM)
 root.update()
 aquired_flag = False
 previous_read = -5000
+message = "0"
 while True:
-    if not acquired_flag:
+    if not aquired_flag:
         value = (input_serial.readline().decode())
         input_value = float(value)
         if input_value >= previous_read:
@@ -39,11 +40,13 @@ while True:
             message = "0"
             while(acquired_flag and input_value >= 30):
                 value = (input_serial.readline().decode())
-                input_value = float(value
+                input_value = float(value)
                 input_serial.write(str("0").encode())
+                input_serial.readline().decode()
+                # server.send(message.encode())
             print('ready')
             acquired_flag = false
-        server.send(message.encode())
+        #server.send(message.encode())
     root.update()
 
 server.close()
