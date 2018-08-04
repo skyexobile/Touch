@@ -2,11 +2,7 @@ import serial, datetime, time, re, pickle, os, select, sys
 import tkinter as tk
 import numpy as np
 from time import gmtime, strftime
-#import plotly.plotly as py
-#import plotly.graph_objs as go
 import csv
-
-
 
 print("Connecting to Touch Output")
 output_serial = serial.Serial('/dev/cu.usbmodem1411')
@@ -18,15 +14,42 @@ mappingData = []
 type = 0
 typevalue = 0
 acquired_flag = False
-data = {'SubID': "0", 'Cond': "0",'Input_Time': "0", 'Input_Value': "0", 'Output_Time': "0", 'Output_Value': "0", 'Elapsed_Time': "0", 'Duration': "0"}
-
-
+data = []
+loaded = False
 def release():
     output_serial.write(str(9).encode())
     output_serial.readline().decode()
 
+def load_file():
+    filename =  filedialog.askopenfilename(initialdir = "/",title = "Select file",filetypes = [("CSV files", "*.csv")])
+    with open(filename) as csv_file:
+        reader = csv.reader(csv_file, delimiter = '\n')
+        #Here is where you should be reading through the file and sending values to output serial
+        for row in reader:
+            data.append(', '.join(row))
 
-
+def generate():
+    previous_read = -5000
+    for input_value in data:
+        if( (input_value) >= 100 and (input_value) < 250 and not acquired_flag):
+            initial_read = (input_value)
+            output_serial.write(str(1).encode())
+            #we need to read dummy value after write.
+            output_serial.readline().decode()
+            acquired_flag = True
+        elif( (input_value) >= 250 and (input_value) <400 ):
+            initial_read = (input_value)
+            output_serial.write(str(2).encode())
+            output_serial.readline().decode()
+        elif( (input_value) >= 400):
+            initial_read = (input_value)
+            output_serial.write(str(3).encode())
+            output_serial.readline().decode()
+        elif(acquired_flag and (previous_read-15)> input_value):
+            output_serial.write(str(0).encode())
+            output_serial.readline().decode()
+            acquired_flag = False
+        previous_read = input_value
 def csv_writer(data, path):
     with open(path, 'a', newline='') as csv_file:
         writer = csv.writer(csv_file)
@@ -42,39 +65,13 @@ flag = False
 init_flag = False
 
 B = tk.Button(root, text = "Release", command = release)
+B1 = tk.Button(root, text = "Load File", command = load_file)
+B2 = tk.Button(root, text = "Squeeze Playback", command = generate)
 B.place(relx=.5, rely=1.5, anchor="center")
+B1.place(relx=.5, rely=1.5, anchor="center")
+B2.place(relx=.5, rely=1.5, anchor="center")
 B.pack()
-
-root.update()
-previous_read = -5000
-
+B1.pack()
+B2.pack()
 while True:
-    input_value =0
-    s_time = time.time()
-    if( (input_value) >= 100 and (input_value) < 250 and not acquired_flag):
-        #print(s_time)
-        initial_read = (input_value)
-        output_serial.write(str(1).encode())
-        #print("initiate squeeze ", time.time())
-        o_val = output_serial.readline().decode()
-        #print(time.time())
-        acquired_flag = True
-    elif( (input_value) >= 250 and (input_value) <400 ):
-        initial_read = (input_value)
-        output_serial.write(str(2).encode())
-        #print("initiate squeeze ", time.time())
-        o_val = output_serial.readline().decode()
-        #print(time.time())
-    elif( (input_value) >= 400):
-        initial_read = (input_value)
-        output_serial.write(str(3).encode())
-        #print("initiate squeeze ", time.time())
-        o_val = output_serial.readline().decode()
-        #print(time.time())
-    elif(acquired_flag and (previous_read-15)> input_value):
-        output_serial.write(str(0).encode())
-        output_serial.readline().decode()
-        
-        acquired_flag = False
-    previous_read = input_value
     root.update()
