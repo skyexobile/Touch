@@ -256,8 +256,14 @@ pausebutton.bind("<Button-1>",pausesong)
 B.pack(side = tk.BOTTOM)
 root.update()
 
-def save_to_csv(time,val):
-    print("time,val")
+def csv_writer(data, path):
+    with open(path, "a", newline = '') as csv_file:
+        writer = csv.writer(csv_file, delimiter = ' ')
+        for value in data:
+            csv_file.write(str(value) + ',')
+        csv_file.write('\r\n')
+        csv_file.close()
+
 
 while True:
     print('This is happening!')
@@ -270,7 +276,9 @@ while True:
         if pygame.mixer.music.get_busy():
             print('sending to csv!')
             time = pygame.mixer.music.get_pos()
-            save_to_csv(time,input_value)
+            data = [time,input_value]
+            print(data)
+            csv_writer(data,'touches.csv')
         if input_value >= previous_read:
             message = str(input_value)
             message= message.replace("\n", "")
@@ -284,8 +292,8 @@ while True:
                 input_value = float(value)
                 input_serial.write(str("0").encode())
                 input_serial.readline().decode()
-                if isPlaying:
-                    save_to_csv(time,input_value)
+                # if isPlaying:
+                #     save_to_csv(time,input_value)
                 # server.send(message.encode())
             print('ready')
             acquired_flag = False
