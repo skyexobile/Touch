@@ -51,8 +51,16 @@ def generate():
     global acquired_flag, soft_value, medium_value, hard_value
     previous_read = -5000
     for (input_value) in data:
+        media_time = pygame.mixer.music.get_pos()
+        data_time = input_value[:input_value.find(',')-1]
+        while abs(float(data_time) - float(media_time)) > 30:
+            media_time = pygame.mixer.music.get_pos()
+            print('2media time is ', media_time)
+            print('data time is ', data_time)
+
         input_value = (input_value[input_value.find(',')+1:])
         print("input value is ", float(input_value))
+        print(time.time())
         if( float(input_value) >= soft_value-10 and float(input_value) < medium_value and not acquired_flag):
             print("soft squeeze")
             initial_read = (input_value)
@@ -155,6 +163,8 @@ def pausesong(event):
 def playsong(event):
     isPlaying = True
     pygame.mixer.music.play()
+    generate()
+    #need to do something about generate() when music is paused
 
 
 

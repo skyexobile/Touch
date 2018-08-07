@@ -36,7 +36,7 @@ def set_soft():
             elapsed_time = time.time() - init_time
             input_value = float(value) + offset
         print(input_value)
-        if input_value >= 50:
+        if input_value > 50:
             while input_value >50:
                 value_list.append(input_value)
             index = value_list.index(max(value_list))
