@@ -41,6 +41,7 @@ def generate():
     global acquired_flag, soft_value, medium_value, hard_value
     previous_read = -5000
     for (input_value) in data:
+        input_value = (input_value[input_value.find(',')+1:])
         print("input value is ", float(input_value))
         if( float(input_value) >= soft_value-10 and float(input_value) < medium_value and not acquired_flag):
             print("soft squeeze")
@@ -63,10 +64,10 @@ def generate():
             acquired_flag = False
         previous_read = float(input_value)
 
-def csv_writer(data, path):
+def csv_writer(data2, path):
     with open(path, 'a', newline='') as csv_file:
         writer = csv.writer(csv_file)
-        for key, value in data.items():
+        for key, value in data2.items():
             writer.writerow(value)
 def load_settings():
     global soft_value, medium_value, hard_value
