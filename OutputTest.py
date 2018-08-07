@@ -78,8 +78,11 @@ def load_settings():
         for row in reader:
             settings.append(row[0])
     soft_value = settings[0]
+    soft_value = float(soft_value)
     medium_value = settings[1]
+    medium_value = float(medium_value)
     hard_value = settings[2]
+    hard_value = float(hard_value)
 path = "Output_ST.csv"
 myFile = open(path, 'a')
 

@@ -11,7 +11,10 @@ import tkinter.messagebox
 
 pygame.mixer.init(44100, -16,2,2048)
 print("Connecting to Touch Output")
-output_serial = serial.Serial('/dev/cu.usbmodem14631')
+#Niloofar's computer
+#output_serial = serial.Serial('/dev/cu.usbmodem14631')
+#Angela's computer
+output_serial = serial.Serial('/dev/cu.usbmodem1411')
 output_serial.setBaudrate(115200)
 
 output_serial.setDTR(False)
@@ -22,6 +25,9 @@ typevalue = 0
 acquired_flag = False
 data = []
 loaded = False
+soft_value = 100,
+medium_value = 200,
+hard_value = 300
 def release():
     output_serial.write(str(9).encode())
     output_serial.readline().decode()
@@ -63,6 +69,7 @@ def generate():
             output_serial.write(str(3).encode())
             output_serial.readline().decode()
         elif(acquired_flag and (previous_read-15)> float(input_value)):
+            print('release')
             output_serial.write(str(0).encode())
             output_serial.readline().decode()
             acquired_flag = False
@@ -84,6 +91,12 @@ def load_settings():
     soft_value = settings[0]
     medium_value = settings[1]
     hard_value = settings[2]
+    soft_value = settings[0]
+    soft_value = float(soft_value)
+    medium_value = settings[1]
+    medium_value = float(medium_value)
+    hard_value = settings[2]
+    hard_value = float(hard_value)
 path = "Output_ST.csv"
 myFile = open(path, 'a')
 
@@ -92,8 +105,9 @@ root = tk.Tk()
 flag = False
 init_flag = False
 
+load_settings_button = tk.Button(root, text = "Load Settings", command = load_settings)
 B = tk.Button(root, text = "Release", command = release)
-B1 = tk.Button(root, text = "Load File", command = load_file)
+B1 = tk.Button(root, text = "Load Touch File", command = load_file)
 B2 = tk.Button(root, text = "Squeeze Playback", command = generate)
 B3 = tk.Button(root, text = "Sample Squeezes", command = sample)
 B.place(relx=.5, rely=1.5, anchor="center")
@@ -104,6 +118,7 @@ B.pack()
 B1.pack()
 B2.pack()
 B3.pack()
+load_settings_button.pack()
 
 v =tk.StringVar()
 songlabel =tk.Label(root,textvariable=v,width=80)

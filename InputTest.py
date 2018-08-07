@@ -21,6 +21,7 @@ root = tk.Tk()
 def reset():
     input_serial.write(str("0").encode())
 def set_soft():
+    print('soft function')
     offset = 0
     value_list = []
     max_list = []
@@ -34,8 +35,9 @@ def set_soft():
             value = (input_serial.readline().decode())
             elapsed_time = time.time() - init_time
             input_value = float(value) + offset
-        if input_value > 50:
-            while input_value >20:
+        print(input_value)
+        if input_value >= 50:
+            while input_value >50:
                 value_list.append(input_value)
             index = value_list.index(max(value_list))
             max_list.append(value_list[index])

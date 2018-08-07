@@ -11,7 +11,11 @@ import tkinter.messagebox
 
 
 pygame.mixer.init(44100, -16,2,2048)
-input_serial = serial.Serial('/dev/cu.usbmodem14631')
+#Niloofar's computer
+#input_serial = serial.Serial('/dev/cu.usbmodem14631')
+#Angela's computer
+input_serial = serial.Serial('/dev/cu.usbmodem1411')
+
 input_serial.setBaudrate(115200)
 print("Connected to Sensor")
 '''
@@ -20,15 +24,134 @@ server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 #IP_address = str(sys.argv[1])
 #Port = int(sys.argv[2])server.connect(("localhost", 5000))
 '''
-
+soft_value = 100
+med_value = 500
+hard_value = 1000
 root = tk.Tk()
-label1 = tk.Label(root, text = "Calibration")
 
 
-def getCali():
+def reset():
     input_serial.write(str("0").encode())
-B =  tk.Button(root, text = "Calibrate", command = getCali)
+def set_soft():
+    print('soft function')
+    offset = 0
+    value_list = []
+    max_list = []
+    global soft_value
+    counter = 0
+    while counter <3:
+        print('counter value ', counter)
+        value = (input_serial.readline().decode())
+        try:
+            input_value = float(value) + offset
+        except:
+            value = (input_serial.readline().decode())
+            input_value = float(value) + offset
+        print(input_value)
+        if input_value > 200:
+            while input_value >30:
+                value_list.append(input_value)
+                print('appending value', input_value)
+                value = (input_serial.readline().decode())
+                try:
+                    input_value = float(value) + offset
+                except:
+                    value = (input_serial.readline().decode())
+                    input_value = float(value) + offset
+            index = value_list.index(max(value_list))
+            max_list.append(value_list[index])
+            max_list.append(value_list[index+1])
+            max_list.append(value_list[index+2])
+            max_list.append(value_list[index+3])
+            print('max list is ', max_list)
+            counter = counter +1
+        elif input_value < -20:
+            offset = offset - input_value
+    soft_value = sum(max_list)/len(max_list)
+def set_medium():
+    offset = 0
+    value_list = []
+    max_list = []
+    global medium_value
+    counter = 0
+    while counter <3:
+        print('counter value ', counter)
+        value = (input_serial.readline().decode())
+        try:
+            input_value = float(value) + offset
+        except:
+            value = (input_serial.readline().decode())
+            input_value = float(value) + offset
+        print(input_value)
+        if input_value > 300:
+            while input_value >50:
+                value_list.append(input_value)
+                value = (input_serial.readline().decode())
+                try:
+                    input_value = float(value) + offset
+                except:
+                    value = (input_serial.readline().decode())
+                    input_value = float(value) + offset
+            index = value_list.index(max(value_list))
+            max_list.append(value_list[index])
+            max_list.append(value_list[index+1])
+            max_list.append(value_list[index+2])
+            max_list.append(value_list[index+3])
+            print('max list is ', max_list)
+            counter = counter +1
+        elif input_value < -20:
+            offset = offset - input_value
+    med_value = sum(max_list)/len(max_list)
+def set_hard():
+    offset = 0
+    value_list = []
+    max_list = []
+    global hard_value
+    counter = 0
+    while counter <3:
+        print('counter value ', counter)
+        value = (input_serial.readline().decode())
+        try:
+            input_value = float(value) + offset
+        except:
+            value = (input_serial.readline().decode())
+            input_value = float(value) + offset
+        print(input_value)
+        if input_value > 500:
+            while input_value >40:
+                value_list.append(input_value)
+                value = (input_serial.readline().decode())
+                try:
+                    input_value = float(value) + offset
+                except:
+                    value = (input_serial.readline().decode())
+                    input_value = float(value) + offset
+            index = value_list.index(max(value_list))
+            max_list.append(value_list[index])
+            max_list.append(value_list[index+1])
+            max_list.append(value_list[index+2])
+            max_list.append(value_list[index+3])
+            print('max list is ', max_list)
+            counter = counter +1
+        elif input_value < -20:
+            offset = offset - input_value
+    hard_value = sum(max_list)/len(max_list)
+def save_settings():
+    global soft_value, med_value, hard_value
+    settings = [soft_value, med_value, hard_value]
+    csv_writer(settings, "Settings.csv")
 
+reset_button =  tk.Button(root, text = "Reset Sensor", command = reset)
+soft_button =  tk.Button(root, text = "Define Soft", command = set_soft)
+medium_button =  tk.Button(root, text = "Define Medium", command = set_medium)
+hard_button  =  tk.Button(root, text = "Define Hard", command = set_hard)
+save_button  =  tk.Button(root, text = "Save Settings", command = save_settings)
+
+reset_button.pack(side = tk.BOTTOM)
+soft_button.pack(side = tk.BOTTOM)
+medium_button.pack(side = tk.BOTTOM)
+hard_button.pack(side = tk.BOTTOM)
+save_button.pack(side = tk.BOTTOM)
 listofsongs=[]
 realnames = []
 
@@ -253,9 +376,9 @@ previousbutton.bind("<Button-1>",previoussong)
 stopbutton.bind("<Button-1>",stopsong)
 pausebutton.bind("<Button-1>",pausesong)
 
-B.pack(side = tk.BOTTOM)
 root.update()
-
+'''
+This is the one Niloofar is using
 def csv_writer(data, path):
     with open(path, "a", newline = '') as csv_file:
         writer = csv.writer(csv_file, delimiter = ' ')
@@ -263,41 +386,46 @@ def csv_writer(data, path):
             csv_file.write(str(value) + ',')
         csv_file.write('\r\n')
         csv_file.close()
-
-
+'''
+def csv_writer(data, path):
+    with open(path, "w", newline = '') as csv_file:
+        writer = csv.writer(csv_file, delimiter = ' ')
+        for value in data:
+            csv_file.write(str(value) + '\n')
+        csv_file.close()
+offset = 0
+data = []
 while True:
-    print('This is happening!')
-    if not aquired_flag:
-        # a.encode('utf-8').strip()
-        value = (input_serial.readline().decode(errors='ignore'))
-        if type(value).__name__ != "int":
-            value = 1
-        input_value = float(value)
-        if pygame.mixer.music.get_busy():
-            print('sending to csv!')
-            time = pygame.mixer.music.get_pos()
-            data = [time,input_value]
-            print(data)
-            csv_writer(data,'touches.csv')
-        if input_value >= previous_read:
-            message = str(input_value)
-            message= message.replace("\n", "")
-            previous_read = input_value
-            # print(time)
-        else:
-            acquired_flag = True
-            message = "0"
-            while(acquired_flag and input_value >= 30):
-                value = (input_serial.readline().decode())
-                input_value = float(value)
-                input_serial.write(str("0").encode())
-                input_serial.readline().decode()
-                # if isPlaying:
-                #     save_to_csv(time,input_value)
-                # server.send(message.encode())
-            print('ready')
-            acquired_flag = False
-        #server.send(message.encode())
+    # a.encode('utf-8').strip()
+    value = (input_serial.readline().decode())
+    try:
+        input_value = float(value) + offset
+    except:
+        value = (input_serial.readline().decode())
+        input_value = float(value) + offset
+
+    if input_value <-20:
+        offset = offset -input_value
+        try:
+            input_value = float(value) + offset
+        except:
+            value = (input_serial.readline().decode())
+            input_value = float(value) + offset
+    if pygame.mixer.music.get_busy():
+        print('sending to csv!')
+        time = pygame.mixer.music.get_pos()
+        message =str(time) + "," + str(input_value)
+        message= message.replace("\n", "")
+        data.append(message)
+        print(message)
+        csv_writer(data, 'touches.csv')
+        '''
+        data = [time,input_value]
+        print(data)
+        csv_writer(data,'touches.csv')
+        '''
+
+    #server.send(message.encode())
     root.update()
 
 
