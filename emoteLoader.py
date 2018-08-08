@@ -14,11 +14,13 @@ print("Connecting to Touch Output")
 #Niloofar's computer
 #output_serial = serial.Serial('/dev/cu.usbmodem14631')
 #Angela's computer
+
 output_serial = serial.Serial('/dev/cu.usbmodem1411')
 output_serial.setBaudrate(115200)
 
 output_serial.setDTR(False)
 output_serial.setRTS(False)
+
 mappingData = []
 type = 0
 typevalue = 0
@@ -33,8 +35,8 @@ def release():
     output_serial.readline().decode()
 
 def load_file():
-    filename =  filedialog.askopenfilename(initialdir = "/",title = "Select file",filetypes = [("CSV files", "*.csv")])
-    with open(filename) as csv_file:
+    #filename =  filedialog.askopenfilename(initialdir = "/",title = "Select file",filetypes = [("CSV files", "*.csv")])
+    with open('touches.csv') as csv_file:
         reader = csv.reader(csv_file, delimiter = '\n')
         #Here is where you should be reading through the file and sending values to output serial
         for row in reader:
@@ -48,15 +50,16 @@ def sample():
     output_serial.readline().decode()
 
 def generate():
+    initial_pbtime = time.time()
+    print('initial time is ',  initial_pbtime)
     global acquired_flag, soft_value, medium_value, hard_value
     previous_read = -5000
     for (input_value) in data:
+        print("data is ", input_value)
         media_time = pygame.mixer.music.get_pos()
-        data_time = input_value[:input_value.find(',')-1]
+        data_time = input_value[:input_value.find(',')]
         while abs(float(data_time) - float(media_time)) > 30:
             media_time = pygame.mixer.music.get_pos()
-            print('2media time is ', media_time)
-            print('data time is ', data_time)
 
         input_value = (input_value[input_value.find(',')+1:])
         print("input value is ", float(input_value))
@@ -65,18 +68,19 @@ def generate():
             print("soft squeeze")
             initial_read = (input_value)
             output_serial.write(str(1).encode())
-            #we need to read dummy value after write.
             output_serial.readline().decode()
             acquired_flag = True
         elif( float(input_value) >= medium_value and float(input_value) <hard_value ):
+            print("medium squeeze")
             initial_read = (input_value)
             output_serial.write(str(2).encode())
             output_serial.readline().decode()
         elif( float(input_value) >= hard_value):
+            print("hard squeeze")
             initial_read = float(input_value)
             output_serial.write(str(3).encode())
             output_serial.readline().decode()
-        elif(acquired_flag and (previous_read-15)> float(input_value)):
+        elif(acquired_flag and (previous_read-10)> float(input_value)):
             print('release')
             output_serial.write(str(0).encode())
             output_serial.readline().decode()
@@ -105,6 +109,8 @@ def load_settings():
     medium_value = float(medium_value)
     hard_value = settings[2]
     hard_value = float(hard_value)
+    print('soft is ', soft_value, ' medium is ', medium_value, ' hard is ', hard_value)
+
 path = "Output_ST.csv"
 myFile = open(path, 'a')
 
@@ -354,7 +360,6 @@ stopbutton.bind("<Button-1>",stopsong)
 pausebutton.bind("<Button-1>",pausesong)
 
 B.pack(side = tk.BOTTOM)
-
 
 while True:
     root.update()
