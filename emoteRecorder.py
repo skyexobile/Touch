@@ -48,22 +48,22 @@ def set_soft():
             value = (input_serial.readline().decode())
             input_value = float(value) + offset
         print(input_value)
-        if input_value > 200:
+        if input_value > 100:
             while input_value >30:
                 value_list.append(input_value)
-                print('appending value', input_value)
                 value = (input_serial.readline().decode())
                 try:
                     input_value = float(value) + offset
                 except:
                     value = (input_serial.readline().decode())
                     input_value = float(value) + offset
+                print(input_value)
+
             index = value_list.index(max(value_list))
             max_list.append(value_list[index])
             max_list.append(value_list[index+1])
             max_list.append(value_list[index+2])
             max_list.append(value_list[index+3])
-            print('max list is ', max_list)
             counter = counter +1
         elif input_value < -20:
             offset = offset - input_value
@@ -83,7 +83,7 @@ def set_medium():
             value = (input_serial.readline().decode())
             input_value = float(value) + offset
         print(input_value)
-        if input_value > 300:
+        if input_value > 200:
             while input_value >50:
                 value_list.append(input_value)
                 value = (input_serial.readline().decode())
@@ -92,12 +92,13 @@ def set_medium():
                 except:
                     value = (input_serial.readline().decode())
                     input_value = float(value) + offset
+            print(input_value)
+
             index = value_list.index(max(value_list))
             max_list.append(value_list[index])
             max_list.append(value_list[index+1])
             max_list.append(value_list[index+2])
             max_list.append(value_list[index+3])
-            print('max list is ', max_list)
             counter = counter +1
         elif input_value < -20:
             offset = offset - input_value
@@ -117,7 +118,7 @@ def set_hard():
             value = (input_serial.readline().decode())
             input_value = float(value) + offset
         print(input_value)
-        if input_value > 500:
+        if input_value > 400:
             while input_value >40:
                 value_list.append(input_value)
                 value = (input_serial.readline().decode())
@@ -131,8 +132,9 @@ def set_hard():
             max_list.append(value_list[index+1])
             max_list.append(value_list[index+2])
             max_list.append(value_list[index+3])
-            print('max list is ', max_list)
             counter = counter +1
+            print(input_value)
+
         elif input_value < -20:
             offset = offset - input_value
     hard_value = sum(max_list)/len(max_list)

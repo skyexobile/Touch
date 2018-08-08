@@ -80,7 +80,7 @@ def generate():
             initial_read = float(input_value)
             output_serial.write(str(3).encode())
             output_serial.readline().decode()
-        elif(acquired_flag and (previous_read-10)> float(input_value)):
+        elif(acquired_flag and (previous_read-5)> float(input_value)):
             print('release')
             output_serial.write(str(0).encode())
             output_serial.readline().decode()
