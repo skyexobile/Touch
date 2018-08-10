@@ -12,9 +12,9 @@ import tkinter.messagebox
 
 pygame.mixer.init(44100, -16,2,2048)
 #Niloofar's computer
-#input_serial = serial.Serial('/dev/cu.usbmodem14631')
+input_serial = serial.Serial('/dev/cu.usbmodem14431')
 #Angela's computer
-input_serial = serial.Serial('/dev/cu.usbmodem1411')
+# input_serial = serial.Serial('/dev/cu.usbmodem1411')
 
 input_serial.setBaudrate(115200)
 print("Connected to Sensor")
@@ -28,6 +28,7 @@ soft_value = 100
 med_value = 500
 hard_value = 1000
 root = tk.Tk()
+
 
 
 def reset():
@@ -156,12 +157,15 @@ hard_button.pack(side = tk.BOTTOM)
 save_button.pack(side = tk.BOTTOM)
 listofsongs=[]
 realnames = []
+touchFileNames = []
+
 
 v =tk.StringVar()
 songlabel =tk.Label(root,textvariable=v,width=80)
 index=0
 count=0
-
+global touchFile
+touchFile = "touches.csv"
 global ctr
 ctr=0
 global freq
@@ -188,6 +192,7 @@ def pausesong(event):
 
 
 def playsong(event):
+    print(touchFileNames)
     isPlaying = True
     pygame.mixer.music.play()
 
@@ -198,11 +203,13 @@ def nextsong(event):
     index += 1
     if (index < count):
         pygame.mixer.music.load(listofsongs[index])
+        touchFile = touchFileNames[index]
         isPlaying = True
         pygame.mixer.music.play()
     else:
         index = 0
         pygame.mixer.music.load(listofsongs[index])
+        touchFile = touchFileNames[index]
         isPlaying = True
         pygame.mixer.music.play()
     try:
@@ -214,6 +221,7 @@ def previoussong(event):
     global index
     index -= 1
     pygame.mixer.music.load(listofsongs[index])
+    touchFile = touchFileNames[index]
     isPlaying = True
     pygame.mixer.music.play()
     try:
@@ -251,6 +259,7 @@ def toggle():
 def directorychooser():
  global count
  global index
+ global touchFile
     #count=0
 
  directory = askdirectory()
@@ -261,33 +270,45 @@ def directorychooser():
     #listbox.delete(0, END)
     del listofsongs[:]
     del realnames[:]
+    del touchFileNames[:]
     os.chdir(directory)
     for files in os.listdir(directory):
       if files.endswith('.mp3'):
           realdir = os.path.realpath(files)
+          fileName = os.path.splitext(files)[0]
+          touchFileName = fileName + '.csv'
           audio = ID3(realdir)
           realnames.append(audio.get('TIT2', 'No Title'))
           listofsongs.append(files)
+          touchFileNames.append(touchFileName)
       else:
         print(files+" is not a song")
-
+    print(listofsongs)
     if listofsongs == [] :
        okay=tkinter.messagebox.askretrycancel("No songs found","no songs")
        if(okay==True):
            directorychooser()
     else:
+        print('here!***')
+        print(touchFileNames)
         listbox.delete(0, tk.END)
         realnames.reverse()
+        print('here!1')
+        pygame.mixer.music.load(listofsongs[0])
+        touchFile = touchFileNames[0]
+        print('here!2')
         for items in realnames:
             listbox.insert(0, items)
         for i in listofsongs:
             count = count + 1
+        print('here!3')
+
         # realdir = os.path.realpath(listofsongs[0])
         # audio = ID3(realdir)
         # freq = audio.info.sample_rate
         # pygame.mixer.init(22050, -16, 2)
         # print(pygame.mixer.get_init())
-        pygame.mixer.music.load(listofsongs[0])
+
         # pygame.mixer.music.play()
         try:
             updatelabel()
@@ -413,14 +434,15 @@ while True:
         except:
             value = (input_serial.readline().decode())
             input_value = float(value) + offset
-    if pygame.mixer.music.get_busy():
+    if pygame.mixer.music.get_busy() and ctr%2==0:
         print('sending to csv!')
         time = pygame.mixer.music.get_pos()
         message =str(time) + "," + str(input_value)
         message= message.replace("\n", "")
         data.append(message)
-        print(message)
-        csv_writer(data, 'touches.csv')
+        # print(message)
+        print(touchFile)
+        csv_writer(data, touchFile)
         '''
         data = [time,input_value]
         print(data)
