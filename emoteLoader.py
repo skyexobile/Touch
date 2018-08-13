@@ -34,6 +34,14 @@ def release():
     output_serial.write(str(9).encode())
     output_serial.readline().decode()
 
+def auto_load_file(file):
+    with open(file) as csv_file:
+        reader = csv.reader(csv_file, delimiter = '\n')
+        #Here is where you should be reading through the file and sending values to output serial
+        for row in reader:
+            data.append(', '.join(row))
+
+
 def load_file():
     #filename =  filedialog.askopenfilename(initialdir = "/",title = "Select file",filetypes = [("CSV files", "*.csv")])
     with open('touches.csv') as csv_file:
@@ -179,11 +187,15 @@ def nextsong(event):
     index += 1
     if (index < count):
         pygame.mixer.music.load(listofsongs[index])
+        touchFile = touchFileNames[index]
+        auto_load_file(touchFileNames[index])
         isPlaying = True
         pygame.mixer.music.play()
     else:
         index = 0
         pygame.mixer.music.load(listofsongs[index])
+        touchFile = touchFileNames[index]
+        auto_load_file(touchFileNames[index])
         isPlaying = True
         pygame.mixer.music.play()
     try:
@@ -195,6 +207,8 @@ def previoussong(event):
     global index
     index -= 1
     pygame.mixer.music.load(listofsongs[index])
+    touchFile = touchFileNames[index]
+    auto_load_file(touchFileNames[index])
     isPlaying = True
     pygame.mixer.music.play()
     try:
@@ -232,6 +246,7 @@ def toggle():
 def directorychooser():
  global count
  global index
+ global touchFile
     #count=0
 
  directory = askdirectory()
@@ -242,13 +257,17 @@ def directorychooser():
     #listbox.delete(0, END)
     del listofsongs[:]
     del realnames[:]
+    del touchFileNames[:]
     os.chdir(directory)
     for files in os.listdir(directory):
       if files.endswith('.mp3'):
           realdir = os.path.realpath(files)
+          fileName = os.path.splitext(files)[0]
+          touchFileName = fileName + '.csv'
           audio = ID3(realdir)
           realnames.append(audio.get('TIT2', 'No Title'))
           listofsongs.append(files)
+          touchFileNames.append(touchFileName)
       else:
         print(files+" is not a song")
 
@@ -259,6 +278,9 @@ def directorychooser():
     else:
         listbox.delete(0, tk.END)
         realnames.reverse()
+        pygame.mixer.music.load(listofsongs[0])
+        touchFile = touchFileNames[0]
+        auto_load_file(touchFile)
         for items in realnames:
             listbox.insert(0, items)
         for i in listofsongs:
@@ -268,7 +290,6 @@ def directorychooser():
         # freq = audio.info.sample_rate
         # pygame.mixer.init(22050, -16, 2)
         # print(pygame.mixer.get_init())
-        pygame.mixer.music.load(listofsongs[0])
         # pygame.mixer.music.play()
         try:
             updatelabel()

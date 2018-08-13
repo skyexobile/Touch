@@ -192,7 +192,7 @@ def pausesong(event):
 
 
 def playsong(event):
-    print(touchFileNames)
+    # print(touchFileNames)
     isPlaying = True
     pygame.mixer.music.play()
 
@@ -289,19 +289,14 @@ def directorychooser():
        if(okay==True):
            directorychooser()
     else:
-        print('here!***')
-        print(touchFileNames)
         listbox.delete(0, tk.END)
         realnames.reverse()
-        print('here!1')
         pygame.mixer.music.load(listofsongs[0])
         touchFile = touchFileNames[0]
-        print('here!2')
         for items in realnames:
             listbox.insert(0, items)
         for i in listofsongs:
             count = count + 1
-        print('here!3')
 
         # realdir = os.path.realpath(listofsongs[0])
         # audio = ID3(realdir)
