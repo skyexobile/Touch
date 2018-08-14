@@ -1,4 +1,5 @@
 import serial, datetime, time, re, pickle, os, select, sys
+from tkinter import *
 import tkinter as tk
 from tkinter import filedialog
 import numpy as np
@@ -14,13 +15,14 @@ print("Connecting to Touch Output")
 #Niloofar's computer
 #output_serial = serial.Serial('/dev/cu.usbmodem14631')
 #Angela's computer
-
+'''
 output_serial = serial.Serial('/dev/cu.usbmodem1411')
 output_serial.setBaudrate(115200)
 
 output_serial.setDTR(False)
 output_serial.setRTS(False)
-
+'''
+surveyMode = True
 mappingData = []
 type = 0
 typevalue = 0
@@ -42,13 +44,6 @@ def auto_load_file(file):
             data.append(', '.join(row))
 
 
-def load_file():
-    #filename =  filedialog.askopenfilename(initialdir = "/",title = "Select file",filetypes = [("CSV files", "*.csv")])
-    with open('touches.csv') as csv_file:
-        reader = csv.reader(csv_file, delimiter = '\n')
-        #Here is where you should be reading through the file and sending values to output serial
-        for row in reader:
-            data.append(', '.join(row))
 def sample():
     output_serial.write(str(4).encode())
     output_serial.readline().decode()
@@ -57,45 +52,101 @@ def sample():
     output_serial.write(str(6).encode())
     output_serial.readline().decode()
 
+def generate_all():
+    while True:
+        generate()
 def generate():
     global acquired_flag, soft_value, medium_value, hard_value
     global previous_read
+    global isPlaying
     if len(data) ==0:
         print("done")
         return
     input_value = data[0]
     media_time = pygame.mixer.music.get_pos()
     data_time = input_value[:input_value.find(',')]
+    print("media time is ", media_time)
     while (float(data_time) - float(media_time)) > 30:
         media_time = pygame.mixer.music.get_pos()
-        print('media_time is ', media_time)
+        '''print('media_time is ', media_time)
         print('data time is ', data_time)
+        '''
     input_value = (input_value[input_value.find(',')+1:])
     #print(time.time())
-    print("value is ", input_value)
-    if( float(input_value) >= soft_value-10 and float(input_value) < medium_value and not acquired_flag):
+    #check this is the last release
+    if( float(input_value) >= soft_value-10 and float(input_value) < medium_value  ):
         print("soft squeeze")
         initial_read = (input_value)
-        output_serial.write(str(1).encode())
-        output_serial.readline().decode()
+        #output_serial.write(str(1).encode())
+        #output_serial.readline().decode()
         acquired_flag = True
     elif( float(input_value) >= medium_value and float(input_value) <hard_value ):
         print("medium squeeze")
         initial_read = (input_value)
-        output_serial.write(str(2).encode())
-        output_serial.readline().decode()
+        #output_serial.write(str(2).encode())
+        #output_serial.readline().decode()
+        acquired_flag = True
     elif( float(input_value) >= hard_value):
         print("hard squeeze")
         initial_read = float(input_value)
-        output_serial.write(str(3).encode())
-        output_serial.readline().decode()
-    elif(acquired_flag and (previous_read-3)> float(input_value)):
+        #output_serial.write(str(3).encode())
+        #output_serial.readline().decode()
+        acquired_flag = True
+    elif(acquired_flag and (previous_read - float(input_value) >=3)):
         print('release')
-        output_serial.write(str(0).encode())
-        output_serial.readline().decode()
+        #output_serial.write(str(0).encode())
+        #output_serial.readline().decode()
+        if surveyMode:
+            pygame.mixer.music.pause()
+            isPlaying = False
+            print('is playing is ', isPlaying)
+            survey()
         acquired_flag = False
+
+
     previous_read = float(input_value)
     del data[0]
+def survey(): # new window definition
+    global CheckVar1, CheckVar2,CheckVar3,CheckVar5, E1
+    global newwin
+    newwin = Toplevel(root)
+    display = Label(newwin, text="What did you think the intent was?")
+    display.pack()
+    CheckVar1 = IntVar()
+    CheckVar2 = IntVar()
+    CheckVar3 = IntVar()
+    CheckVar4 = IntVar()
+    C1 = Checkbutton(newwin, text = "Emotion 1", variable = CheckVar1, \
+                 onvalue = 1, offvalue = 0, height=2, \
+                 width = 20, )
+    C2 = Checkbutton(newwin, text = "Emotion 2", variable = CheckVar2, \
+                 onvalue = 1, offvalue = 0, height=2, \
+                 width = 20)
+    C3 = Checkbutton(newwin, text = "Emotion 3", variable = CheckVar3, \
+                 onvalue = 1, offvalue = 0, height=2, \
+                 width = 20, )
+    C4 = Checkbutton(newwin, text = "Emotion 4", variable = CheckVar4, \
+                 onvalue = 1, offvalue = 0, height=2, \
+                 width = 20)
+    C1.pack()
+    C2.pack()
+    C3.pack()
+    C4.pack()
+    L1 = Label(newwin, text = "Other")
+    L1.pack()
+    E1 = Entry(newwin)
+    E1.pack()
+    submit_button =Button(newwin, text ="Submit", command =submit_response) #command linked
+    submit_button.pack()
+    #submit_button.pack()
+def submit_response():
+    global CheckVar1, CheckVar2,CheckVar3,CheckVar4, newwin, E1, isPlaying
+    print('value1 is ', CheckVar1.get())
+    print('value2 is ', CheckVar2.get())
+    print('other value is ', E1.get())
+    newwin.destroy()
+    pygame.mixer.music.unpause()
+    isPlaying = True
 
 def csv_writer(data2, path):
     with open(path, 'a', newline='') as csv_file:
@@ -113,7 +164,6 @@ def load_settings():
     soft_value = settings[0]
     medium_value = settings[1]
     hard_value = settings[2]
-    soft_value = settings[0]
     soft_value = float(soft_value)
     medium_value = settings[1]
     medium_value = float(medium_value)
@@ -131,15 +181,11 @@ init_flag = False
 
 load_settings_button = tk.Button(root, text = "Load Settings", command = load_settings)
 B = tk.Button(root, text = "Release", command = release)
-B1 = tk.Button(root, text = "Load Touch File", command = load_file)
-B2 = tk.Button(root, text = "Squeeze Playback", command = generate)
+B2 = tk.Button(root, text = "Play Touches", command = generate_all)
 B3 = tk.Button(root, text = "Sample Squeezes", command = sample)
-B.place(relx=.5, rely=1.5, anchor="center")
-B1.place(relx=.5, rely=1.5, anchor="center")
 B2.place(relx=.5, rely=1.5, anchor="center")
 B3.place(relx=.5, rely=1.5, anchor="center")
 B.pack()
-B1.pack()
 B2.pack()
 B3.pack()
 load_settings_button.pack()
@@ -158,7 +204,7 @@ previous_read = -5000
 message = "0"
 listofsongs=[]
 realnames = []
-
+touchFileNames = []
 def updatelabel():
     global index
     global songname
@@ -166,7 +212,7 @@ def updatelabel():
     #return songname
 
 def pausesong(event):
-    global ctr
+    global ctr, isPlaying
     ctr += 1
     if (ctr%2!=0):
         isPlaying = False
@@ -177,8 +223,10 @@ def pausesong(event):
 
 
 def playsong(event):
+    global isPlaying
     isPlaying = True
     pygame.mixer.music.play()
+    print("play is pressed")
     #need to do something about generate() when music is paused
 
 
@@ -269,6 +317,7 @@ def directorychooser():
           realnames.append(audio.get('TIT2', 'No Title'))
           listofsongs.append(files)
           touchFileNames.append(touchFileName)
+          print("appended")
       else:
         print(files+" is not a song")
 
@@ -282,6 +331,8 @@ def directorychooser():
         pygame.mixer.music.load(listofsongs[0])
         touchFile = touchFileNames[0]
         auto_load_file(touchFile)
+        print("loaded ", touchFile)
+        print('here is the data', data)
         for items in realnames:
             listbox.insert(0, items)
         for i in listofsongs:
@@ -385,5 +436,5 @@ B.pack(side = tk.BOTTOM)
 
 while True:
     root.update()
-    while isPlaying and len(data)>0:
+    if (isPlaying and len(data)>0):
         generate()
