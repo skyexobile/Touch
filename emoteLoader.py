@@ -58,42 +58,44 @@ def sample():
     output_serial.readline().decode()
 
 def generate():
-    initial_pbtime = time.time()
-    print('initial time is ',  initial_pbtime)
     global acquired_flag, soft_value, medium_value, hard_value
-    previous_read = -5000
-    for (input_value) in data:
-        print("data is ", input_value)
+    global previous_read
+    if len(data) ==0:
+        print("done")
+        return
+    input_value = data[0]
+    media_time = pygame.mixer.music.get_pos()
+    data_time = input_value[:input_value.find(',')]
+    while (float(data_time) - float(media_time)) > 30:
         media_time = pygame.mixer.music.get_pos()
-        data_time = input_value[:input_value.find(',')]
-        while abs(float(data_time) - float(media_time)) > 30:
-            media_time = pygame.mixer.music.get_pos()
-
-        input_value = (input_value[input_value.find(',')+1:])
-        print("input value is ", float(input_value))
-        print(time.time())
-        if( float(input_value) >= soft_value-10 and float(input_value) < medium_value and not acquired_flag):
-            print("soft squeeze")
-            initial_read = (input_value)
-            output_serial.write(str(1).encode())
-            output_serial.readline().decode()
-            acquired_flag = True
-        elif( float(input_value) >= medium_value and float(input_value) <hard_value ):
-            print("medium squeeze")
-            initial_read = (input_value)
-            output_serial.write(str(2).encode())
-            output_serial.readline().decode()
-        elif( float(input_value) >= hard_value):
-            print("hard squeeze")
-            initial_read = float(input_value)
-            output_serial.write(str(3).encode())
-            output_serial.readline().decode()
-        elif(acquired_flag and (previous_read-5)> float(input_value)):
-            print('release')
-            output_serial.write(str(0).encode())
-            output_serial.readline().decode()
-            acquired_flag = False
-        previous_read = float(input_value)
+        print('media_time is ', media_time)
+        print('data time is ', data_time)
+    input_value = (input_value[input_value.find(',')+1:])
+    #print(time.time())
+    print("value is ", input_value)
+    if( float(input_value) >= soft_value-10 and float(input_value) < medium_value and not acquired_flag):
+        print("soft squeeze")
+        initial_read = (input_value)
+        output_serial.write(str(1).encode())
+        output_serial.readline().decode()
+        acquired_flag = True
+    elif( float(input_value) >= medium_value and float(input_value) <hard_value ):
+        print("medium squeeze")
+        initial_read = (input_value)
+        output_serial.write(str(2).encode())
+        output_serial.readline().decode()
+    elif( float(input_value) >= hard_value):
+        print("hard squeeze")
+        initial_read = float(input_value)
+        output_serial.write(str(3).encode())
+        output_serial.readline().decode()
+    elif(acquired_flag and (previous_read-3)> float(input_value)):
+        print('release')
+        output_serial.write(str(0).encode())
+        output_serial.readline().decode()
+        acquired_flag = False
+    previous_read = float(input_value)
+    del data[0]
 
 def csv_writer(data2, path):
     with open(path, 'a', newline='') as csv_file:
@@ -177,7 +179,6 @@ def pausesong(event):
 def playsong(event):
     isPlaying = True
     pygame.mixer.music.play()
-    generate()
     #need to do something about generate() when music is paused
 
 
@@ -384,3 +385,5 @@ B.pack(side = tk.BOTTOM)
 
 while True:
     root.update()
+    while isPlaying and len(data)>0:
+        generate()
