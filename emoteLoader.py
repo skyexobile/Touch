@@ -29,8 +29,8 @@ typevalue = 0
 acquired_flag = False
 data = []
 loaded = False
-soft_value = 100,
-medium_value = 200,
+soft_value = 100
+medium_value = 200
 hard_value = 300
 def release():
     output_serial.write(str(9).encode())
@@ -59,11 +59,16 @@ def generate():
     global acquired_flag, soft_value, medium_value, hard_value
     global previous_read
     global isPlaying
+    global media_time
+    global data_time
     if len(data) ==0:
         print("done")
         return
     input_value = data[0]
-    media_time = pygame.mixer.music.get_pos()
+    if pygame.mixer:
+        media_time = pygame.mixer.music.get_pos()
+    else:
+        media_time == 0
     data_time = input_value[:input_value.find(',')]
     print("media time is ", media_time)
     while (float(data_time) - float(media_time)) > 30:
@@ -74,6 +79,7 @@ def generate():
     input_value = (input_value[input_value.find(',')+1:])
     #print(time.time())
     #check this is the last release
+    print(soft_value)
     if( float(input_value) >= soft_value-10 and float(input_value) < medium_value  ):
         print("soft squeeze")
         initial_read = (input_value)
@@ -107,7 +113,7 @@ def generate():
     previous_read = float(input_value)
     del data[0]
 def survey(): # new window definition
-    global CheckVar1, CheckVar2,CheckVar3,CheckVar5, E1
+    global CheckVar1, CheckVar2,CheckVar3,CheckVar4,CheckVar5,CheckVar6, E1
     global newwin
     newwin = Toplevel(root)
     display = Label(newwin, text="What did you think the intent was?")
@@ -116,22 +122,35 @@ def survey(): # new window definition
     CheckVar2 = IntVar()
     CheckVar3 = IntVar()
     CheckVar4 = IntVar()
-    C1 = Checkbutton(newwin, text = "Emotion 1", variable = CheckVar1, \
+    CheckVar5 = IntVar()
+    CheckVar6 = IntVar()
+    C1 = Checkbutton(newwin, text = "Sympathetic", variable = CheckVar1, \
                  onvalue = 1, offvalue = 0, height=2, \
                  width = 20, )
-    C2 = Checkbutton(newwin, text = "Emotion 2", variable = CheckVar2, \
+    C2 = Checkbutton(newwin, text = "Fear", variable = CheckVar2, \
                  onvalue = 1, offvalue = 0, height=2, \
                  width = 20)
-    C3 = Checkbutton(newwin, text = "Emotion 3", variable = CheckVar3, \
+    C3 = Checkbutton(newwin, text = "Loving", variable = CheckVar3, \
                  onvalue = 1, offvalue = 0, height=2, \
                  width = 20, )
-    C4 = Checkbutton(newwin, text = "Emotion 4", variable = CheckVar4, \
+    C4 = Checkbutton(newwin, text = "Anger", variable = CheckVar4, \
                  onvalue = 1, offvalue = 0, height=2, \
                  width = 20)
+
+    C5 = Checkbutton(newwin, text = "disgust", variable = CheckVar5, \
+                 onvalue = 1, offvalue = 0, height=2, \
+                 width = 20)
+
+    C6 = Checkbutton(newwin, text = "Surprise", variable = CheckVar6, \
+                 onvalue = 1, offvalue = 0, height=2, \
+                 width = 20)
+
     C1.pack()
     C2.pack()
     C3.pack()
     C4.pack()
+    C5.pack()
+    C6.pack()
     L1 = Label(newwin, text = "Other")
     L1.pack()
     E1 = Entry(newwin)
@@ -140,7 +159,7 @@ def survey(): # new window definition
     submit_button.pack()
     #submit_button.pack()
 def submit_response():
-    global CheckVar1, CheckVar2,CheckVar3,CheckVar4, newwin, E1, isPlaying
+    global CheckVar1, CheckVar2,CheckVar3,CheckVar4, CheckVar5,CheckVar6,newwin, E1, isPlaying
     print('value1 is ', CheckVar1.get())
     print('value2 is ', CheckVar2.get())
     print('other value is ', E1.get())

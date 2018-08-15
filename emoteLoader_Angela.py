@@ -12,10 +12,9 @@ import tkinter.messagebox
 pygame.mixer.init(44100, -16,2,2048)
 print("Connecting to Touch Output")
 #Niloofar's computer
-#output_serial = serial.Serial('/dev/cu.usbmodem14631')
+output_serial = serial.Serial('/dev/cu.usbmodem14631')
 #Angela's computer
-
-output_serial = serial.Serial('/dev/cu.usbmodem1411')
+# output_serial = serial.Serial('/dev/cu.usbmodem1411')
 output_serial.setBaudrate(115200)
 
 output_serial.setDTR(False)
