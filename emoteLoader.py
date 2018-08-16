@@ -65,14 +65,18 @@ def generate():
         print("done")
         return
     input_value = data[0]
-    if pygame.mixer:
+    if pygame.mixer.music.get_busy():
         media_time = pygame.mixer.music.get_pos()
     else:
         media_time == 0
     data_time = input_value[:input_value.find(',')]
     print("media time is ", media_time)
     while (float(data_time) - float(media_time)) > 30:
-        media_time = pygame.mixer.music.get_pos()
+        if pygame.mixer:
+            print("waiting in loop")
+            media_time = pygame.mixer.music.get_pos()
+            print("media time is ", media_time)
+        # media_time = pygame.mixer.music.get_pos()
         '''print('media_time is ', media_time)
         print('data time is ', data_time)
         '''
@@ -103,7 +107,7 @@ def generate():
         #output_serial.write(str(0).encode())
         #output_serial.readline().decode()
         if surveyMode:
-            pygame.mixer.music.pause()
+            manual_pause()
             isPlaying = False
             print('is playing is ', isPlaying)
             survey()
@@ -164,7 +168,7 @@ def submit_response():
     print('value2 is ', CheckVar2.get())
     print('other value is ', E1.get())
     newwin.destroy()
-    pygame.mixer.music.unpause()
+    manual_pause()
     isPlaying = True
 
 def csv_writer(data2, path):
@@ -227,18 +231,38 @@ touchFileNames = []
 def updatelabel():
     global index
     global songname
+    global start_time
     v.set(listofsongs[index])
     #return songname
 
 def pausesong(event):
-    global ctr, isPlaying
+    global ctr, isPlaying, resume_time
     ctr += 1
     if (ctr%2!=0):
         isPlaying = False
-        pygame.mixer.music.pause()
+        resume_time = pygame.mixer.music.get_pos()
+        pygame.mixer.music.stop()
     if(ctr%2==0):
         isPlaying = True
-        pygame.mixer.music.unpause()
+        pygame.mixer.music.load(listofsongs[index])
+        start_time = resume_time/1000
+        pygame.mixer.music.play(1,start_time)
+
+
+
+def manual_pause():
+    global ctr, isPlaying, resume_time
+    ctr += 1
+    if (ctr%2!=0):
+        isPlaying = False
+        resume_time = pygame.mixer.music.get_pos()
+        pygame.mixer.music.stop()
+    if(ctr%2==0):
+        isPlaying = True
+        pygame.mixer.music.load(listofsongs[index])
+        start_time = resume_time/1000
+        pygame.mixer.music.play(1,start_time)
+
 
 
 def playsong(event):
