@@ -3,6 +3,7 @@ import numpy as np
 from time import gmtime, strftime
 import socket
 import tkinter as tk
+from tkinter import*
 import csv
 from tkinter.filedialog import askdirectory
 import pygame
@@ -30,7 +31,11 @@ hard_value = 1000
 root = tk.Tk()
 data = []
 acquired_flag = False
-
+surveyMode = False
+def toSurvey():
+    global surveyMode
+    surveyMode = True
+    print("surveyMode is now ", surveyMode)
 def reset():
     input_serial.write(str("0").encode())
 def set_soft():
@@ -181,7 +186,7 @@ def generate():
     global previous_read
     global isPlaying
     global media_time
-    global data_time, touchFile
+    global data_time, touchFile, surveyMode
     with open(touchFile) as csv_file:
         reader = csv.reader(csv_file, delimiter = '\n')
         #Here is where you should be reading through the file and sending values to output serial
@@ -190,64 +195,67 @@ def generate():
     global isPlaying
     isPlaying = True
     pygame.mixer.music.play()
-    while len(data) > 0:
-        input_value = data[0]
-        media_time = pygame.mixer.music.get_pos()
-        # if pygame.mixer.music.get_busy():
-        #     media_time = pygame.mixer.music.get_pos()
-        # else:
-        #     media_time = 0
-        data_time = input_value[:input_value.find(',')]
-        print("media time is ", media_time)
-        while (float(data_time) - float(media_time)) > 30:
-             media_time = pygame.mixer.music.get_pos()
+    while True:
+        root.update()
+        if(isPlaying and len(data) >0):
+            input_value = data[0]
+            media_time = pygame.mixer.music.get_pos()
             # if pygame.mixer.music.get_busy():
-            #     print("waiting in loop")
             #     media_time = pygame.mixer.music.get_pos()
-            #     print("media time is ", media_time)
             # else:
             #     media_time = 0
-            #     print("still waiting")
-            # media_time = pygame.mixer.music.get_pos()
-        '''print('media_time is ', media_time)
-            print('data time is ', data_time)
-            '''
-        input_value = (input_value[input_value.find(',')+1:])
-        #print(time.time())
-        #check this is the last release
-        print(soft_value)
-        if( float(input_value) >= soft_value-10 and float(input_value) < medium_value  ):
-            print("soft squeeze")
-            initial_read = (input_value)
-            #output_serial.write(str(1).encode())
-            #output_serial.readline().decode()
-            acquired_flag = True
-        elif( float(input_value) >= medium_value and float(input_value) <hard_value ):
-            print("medium squeeze")
-            initial_read = (input_value)
-            #output_serial.write(str(2).encode())
-            #output_serial.readline().decode()
-            acquired_flag = True
-        elif( float(input_value) >= hard_value):
-            print("hard squeeze")
-            initial_read = float(input_value)
-            #output_serial.write(str(3).encode())
-            #output_serial.readline().decode()
-            acquired_flag = True
-        elif(acquired_flag and (previous_read - float(input_value) >=3)):
-            print('release')
-            #output_serial.write(str(0).encode())
-            #output_serial.readline().decode()
-            if surveyMode:
-                manual_pause()
-                isPlaying = False
-                print('is playing is ', isPlaying)
-                survey()
-            acquired_flag = False
+            data_time = input_value[:input_value.find(',')]
+            #print("media time is ", media_time)
+            #print('data time is ', data_time)
+            while (float(data_time) - float(media_time)) > 30:
+                media_time = pygame.mixer.music.get_pos()
+                # if pygame.mixer.music.get_busy():
+                #     print("waiting in loop")
+                #     media_time = pygame.mixer.music.get_pos()
+                #     print("media time is ", media_time)
+                # else:
+                #     media_time = 0
+                #     print("still waiting")
+                # media_time = pygame.mixer.music.get_pos()
+                print('media_time is ', media_time)
+                print('data time is ', data_time)
+
+            input_value = (input_value[input_value.find(',')+1:])
+            #print(time.time())
+            #check this is the last release
+            print(float(input_value))
+            if( float(input_value) >= soft_value-10 and float(input_value) < medium_value  ):
+                print("soft squeeze")
+                initial_read = (input_value)
+                #output_serial.write(str(1).encode())
+                #output_serial.readline().decode()
+                acquired_flag = True
+            elif( float(input_value) >= medium_value and float(input_value) <hard_value ):
+                print("medium squeeze")
+                initial_read = (input_value)
+                #output_serial.write(str(2).encode())
+                #output_serial.readline().decode()
+                acquired_flag = True
+            elif( float(input_value) >= hard_value):
+                print("hard squeeze")
+                initial_read = float(input_value)
+                #output_serial.write(str(3).encode())
+                #output_serial.readline().decode()
+                acquired_flag = True
+            elif(acquired_flag and (previous_read - float(input_value) >=3)):
+                print('release')
+                #output_serial.write(str(0).encode())
+                #output_serial.readline().decode()
+                if surveyMode:
+                    manual_pause()
+                    isPlaying = False
+                    print('is playing is ', isPlaying)
+                    survey()
+                acquired_flag = False
 
 
-        previous_read = float(input_value)
-        del data[0]
+            previous_read = float(input_value)
+            del data[0]
 
 def survey(): # new window definition
     global CheckVar1, CheckVar2,CheckVar3,CheckVar4,CheckVar5,CheckVar6, E1
@@ -309,6 +317,7 @@ medium_button =  tk.Button(root, text = "Define Medium", command = set_medium)
 hard_button  =  tk.Button(root, text = "Define Hard", command = set_hard)
 save_button  =  tk.Button(root, text = "Save Settings", command = save_settings)
 playback_button  =  tk.Button(root, text = "Replay Touches", command = generate)
+sMode_button = tk.Button(root, text = "Survey Mode", command = toSurvey)
 
 reset_button.pack(side = tk.BOTTOM)
 soft_button.pack(side = tk.BOTTOM)
@@ -316,6 +325,7 @@ medium_button.pack(side = tk.BOTTOM)
 hard_button.pack(side = tk.BOTTOM)
 save_button.pack(side = tk.BOTTOM)
 playback_button.pack()
+sMode_button.pack()
 listofsongs=[]
 realnames = []
 touchFileNames = []

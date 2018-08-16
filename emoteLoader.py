@@ -22,7 +22,7 @@ output_serial.setBaudrate(115200)
 output_serial.setDTR(False)
 output_serial.setRTS(False)
 '''
-surveyMode = True
+surveyMode = False
 mappingData = []
 type = 0
 typevalue = 0
@@ -32,6 +32,9 @@ loaded = False
 soft_value = 100
 medium_value = 200
 hard_value = 300
+def toSurvey:
+    global surveyMode
+    surveyMode = True
 def release():
     output_serial.write(str(9).encode())
     output_serial.readline().decode()
@@ -61,6 +64,7 @@ def generate():
     global isPlaying
     global media_time
     global data_time
+    global surveyMode
     if len(data) ==0:
         print("done")
         return
@@ -211,11 +215,13 @@ load_settings_button = tk.Button(root, text = "Load Settings", command = load_se
 B = tk.Button(root, text = "Release", command = release)
 B2 = tk.Button(root, text = "Play Touches", command = generate_all)
 B3 = tk.Button(root, text = "Sample Squeezes", command = sample)
+B4 = tk.Button(root, text = "Survey Mode", command = toSurvey)
 B2.place(relx=.5, rely=1.5, anchor="center")
 B3.place(relx=.5, rely=1.5, anchor="center")
 B.pack()
 B2.pack()
 B3.pack()
+B4.pack()
 load_settings_button.pack()
 
 v =tk.StringVar()
