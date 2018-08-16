@@ -12,7 +12,7 @@ import tkinter.messagebox
 
 pygame.mixer.init(44100, -16,2,2048)
 #Niloofar's computer
-input_serial = serial.Serial('/dev/cu.usbmodem14431')
+input_serial = serial.Serial('/dev/cu.usbmodem14131')
 #Angela's computer
 # input_serial = serial.Serial('/dev/cu.usbmodem1411')
 
