@@ -173,40 +173,50 @@ def load_settings():
     hard_value = float(hard_value)
     print('soft is ', soft_value, ' medium is ', medium_value, ' hard is ', hard_value)
 
-
-
-
 def generate():
+    global data
     global acquired_flag, soft_value, medium_value, hard_value
     global previous_read
     global isPlaying
     global media_time
-    global data_time, touchFile
+    global data_time
+    acquired_flag = False
     with open(touchFile) as csv_file:
         reader = csv.reader(csv_file, delimiter = '\n')
         #Here is where you should be reading through the file and sending values to output serial
         for row in reader:
             data.append(', '.join(row))
-    while len(data) > 0:
+    global isPlaying
+    isPlaying = True
+    pygame.mixer.music.play()
+    print('data is ', data)
+    print("play is pressed")
+    while len(data)>0:
+        if len(data) ==0:
+            print("done")
+            return
         input_value = data[0]
         media_time = pygame.mixer.music.get_pos()
-        # if pygame.mixer.music.get_busy():
-        #     media_time = pygame.mixer.music.get_pos()
-        # else:
-        #     media_time = 0
+
+        '''if pygame.mixer.music.get_busy():
+            media_time = pygame.mixer.music.get_pos()
+        else:
+            media_time =0
+        '''
         data_time = input_value[:input_value.find(',')]
-        print("media time is ", media_time)
+        print("media time is1 ", media_time)
+        print("data time is2 ", data_time)
         while (float(data_time) - float(media_time)) > 30:
-             media_time = pygame.mixer.music.get_pos()
-            # if pygame.mixer.music.get_busy():
-            #     print("waiting in loop")
-            #     media_time = pygame.mixer.music.get_pos()
-            #     print("media time is ", media_time)
-            # else:
-            #     media_time = 0
-            #     print("still waiting")
-            # media_time = pygame.mixer.music.get_pos()
-        '''print('media_time is ', media_time)
+            '''if pygame.mixer.music.get_busy():
+                print("waiting in loop")
+                media_time = pygame.mixer.music.get_pos()
+                print("media time is ", media_time)
+            else:
+                media_time = 0
+                print("still waiting")
+            '''
+            media_time = pygame.mixer.music.get_pos()
+            '''print('media_time is ', media_time)
             print('data time is ', data_time)
             '''
         input_value = (input_value[input_value.find(',')+1:])
@@ -235,17 +245,12 @@ def generate():
             print('release')
             #output_serial.write(str(0).encode())
             #output_serial.readline().decode()
-            if surveyMode:
-                manual_pause()
-                isPlaying = False
-                print('is playing is ', isPlaying)
-                survey()
+            manual_pause()
+            print('is playing is ', isPlaying)
+            survey()
             acquired_flag = False
-
-
         previous_read = float(input_value)
         del data[0]
-
 def survey(): # new window definition
     global CheckVar1, CheckVar2,CheckVar3,CheckVar4,CheckVar5,CheckVar6, E1
     global newwin
