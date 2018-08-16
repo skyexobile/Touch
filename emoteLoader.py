@@ -72,10 +72,13 @@ def generate():
     data_time = input_value[:input_value.find(',')]
     print("media time is ", media_time)
     while (float(data_time) - float(media_time)) > 30:
-        if pygame.mixer:
+        if pygame.mixer.music.get_busy():
             print("waiting in loop")
             media_time = pygame.mixer.music.get_pos()
             print("media time is ", media_time)
+        else:
+            media_time = 0
+            print("still waiting")
         # media_time = pygame.mixer.music.get_pos()
         '''print('media_time is ', media_time)
         print('data time is ', data_time)
