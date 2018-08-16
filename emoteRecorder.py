@@ -32,6 +32,7 @@ root = tk.Tk()
 data = []
 acquired_flag = False
 surveyMode = False
+survey_response = []
 def toSurvey():
     global surveyMode
     surveyMode = True
@@ -217,8 +218,8 @@ def generate():
                 #     media_time = 0
                 #     print("still waiting")
                 # media_time = pygame.mixer.music.get_pos()
-                print('media_time is ', media_time)
-                print('data time is ', data_time)
+                if media_time == -1:
+                    print("media time is -1")
 
             input_value = (input_value[input_value.find(',')+1:])
             #print(time.time())
@@ -256,6 +257,32 @@ def generate():
 
             previous_read = float(input_value)
             del data[0]
+def submit_demo():
+    global demo_win
+    global survey_response
+    global UIN, Age, PID
+    survey_response.append([UIN.get(), Age.get(), PID.get()])
+    print('saved ', survey_response)
+    demo_win.destroy()
+def demog():
+    global UIN, Age, PID, demo_win
+    demo_win = Toplevel(root)
+    display = Label(demo_win, text="Please answer the following.")
+    display.pack()
+    L1 = Label(demo_win, text = "UIN")
+    L1.pack()
+    UIN = Entry(demo_win)
+    UIN.pack()
+    L2 = Label(demo_win, text = "Age")
+    L2.pack()
+    Age = Entry(demo_win)
+    Age.pack()
+    L3 = Label(demo_win, text = "Participant ID")
+    L3.pack()
+    PID = Entry(demo_win)
+    PID.pack()
+    submit_button =Button(demo_win, text ="Submit", command =submit_demo) #command linked
+    submit_button.pack()
 
 def survey(): # new window definition
     global CheckVar1, CheckVar2,CheckVar3,CheckVar4,CheckVar5,CheckVar6, E1
@@ -305,10 +332,10 @@ def survey(): # new window definition
     #submit_button.pack()
 def submit_response():
     global CheckVar1, CheckVar2,CheckVar3,CheckVar4, CheckVar5,CheckVar6,newwin, E1, isPlaying
-    print('value1 is ', CheckVar1.get())
-    print('value2 is ', CheckVar2.get())
-    print('other value is ', E1.get())
+    global survey_response, media_time
+    #survey_response.append([media_time, CheckVar1.get(), CheckVar2.get(), CheckVar3.get(), CheckVar4.get(), CheckVar5.get(), CheckVar6.get(), E1.get()])
     newwin.destroy()
+    #print ('submitted ', [media_time, CheckVar1.get(), CheckVar2.get(), CheckVar3.get(), CheckVar4.get(), CheckVar5.get(), CheckVar6.get(), E1.get()])
     manual_pause()
 
 reset_button =  tk.Button(root, text = "Reset Sensor", command = reset)
@@ -584,6 +611,7 @@ def csv_writer(data, path):
         csv_file.close()
 offset = 0
 data = []
+demog()
 while True:
     # a.encode('utf-8').strip()
     '''value = (input_serial.readline().decode())
