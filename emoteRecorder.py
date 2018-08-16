@@ -14,9 +14,9 @@ pygame.mixer.init(44100, -16,2,2048)
 #Niloofar's computer
 #input_serial = serial.Serial('/dev/cu.usbmodem14431')
 #Angela's computer
-input_serial = serial.Serial('/dev/cu.usbmodem1411')
+#input_serial = serial.Serial('/dev/cu.usbmodem1411')
 
-input_serial.setBaudrate(115200)
+#input_serial.setBaudrate(115200)
 print("Connected to Sensor")
 '''
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -29,7 +29,7 @@ med_value = 500
 hard_value = 1000
 root = tk.Tk()
 data = []
-
+acquired_flag = False
 
 def reset():
     input_serial.write(str("0").encode())
@@ -187,6 +187,9 @@ def generate():
         #Here is where you should be reading through the file and sending values to output serial
         for row in reader:
             data.append(', '.join(row))
+    global isPlaying
+    isPlaying = True
+    pygame.mixer.music.play()
     while len(data) > 0:
         input_value = data[0]
         media_time = pygame.mixer.music.get_pos()
@@ -573,7 +576,7 @@ offset = 0
 data = []
 while True:
     # a.encode('utf-8').strip()
-    value = (input_serial.readline().decode())
+    '''value = (input_serial.readline().decode())
     try:
         input_value = float(value) + offset
     except:
@@ -596,11 +599,12 @@ while True:
         # print(message)
         print(touchFile)
         csv_writer(data, touchFile)
-        '''
+
         data = [time,input_value]
         print(data)
         csv_writer(data,'touches.csv')
-        '''
+
+    '''
 
     #server.send(message.encode())
     root.update()
