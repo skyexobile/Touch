@@ -15,9 +15,9 @@ pygame.mixer.init(44100, -16,2,2048)
 #Niloofar's computer
 #input_serial = serial.Serial('/dev/cu.usbmodem14431')
 #Angela's computer
-#input_serial = serial.Serial('/dev/cu.usbmodem1411')
+input_serial = serial.Serial('/dev/cu.usbmodem1411')
 
-#input_serial.setBaudrate(115200)
+input_serial.setBaudrate(115200)
 print("Connected to Sensor")
 '''
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -614,7 +614,7 @@ data = []
 demog()
 while True:
     # a.encode('utf-8').strip()
-    '''value = (input_serial.readline().decode())
+    value = (input_serial.readline().decode())
     try:
         input_value = float(value) + offset
     except:
@@ -634,15 +634,15 @@ while True:
         message =str(time) + "," + str(input_value)
         message= message.replace("\n", "")
         data.append(message)
-        # print(message)
-        print(touchFile)
+        print('this is being appended ', message)
+        #print(touchFile)
         csv_writer(data, touchFile)
 
-        data = [time,input_value]
-        print(data)
-        csv_writer(data,'touches.csv')
+        #data = [time,input_value]
+        #print(data)
+        #csv_writer(data,'touches.csv')
 
-    '''
+
 
     #server.send(message.encode())
     root.update()
