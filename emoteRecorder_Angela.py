@@ -394,8 +394,12 @@ def previoussong(event):
 
 
 def stopsong(event):
+    global data, touchFile
+    print('stopped')
+    print('data is ', data)
     isPlaying = False
     pygame.mixer.music.stop()
+    csv_writer(data, touchFile)
     # pygame.mixer.quit()
     #v.set("")
     #return songname
@@ -576,6 +580,7 @@ def csv_writer(data, path):
         csv_file.close()
 offset = 0
 data = []
+print("hi")
 while True:
     # a.encode('utf-8').strip()
     value = (input_serial.readline().decode())
@@ -600,7 +605,7 @@ while True:
         data.append(message)
         # print(message)
         print(touchFile)
-        csv_writer(data, touchFile)
+
         '''
         data = [time,input_value]
         print(data)

@@ -32,7 +32,7 @@ loaded = False
 soft_value = 100
 medium_value = 200
 hard_value = 300
-def toSurvey:
+def toSurvey():
     global surveyMode
     surveyMode = True
 def release():
@@ -268,10 +268,14 @@ def manual_pause():
         isPlaying = False
         resume_time = pygame.mixer.music.get_pos()
         pygame.mixer.music.stop()
-    if(ctr%2==0):
-        isPlaying = True
+        print('player stopped')
+
+    else:
         pygame.mixer.music.load(listofsongs[index])
+        print('player loaded')
+        isPlaying = True
         start_time = resume_time/1000
+        print('start time is ', start_time)
         pygame.mixer.music.play(1,start_time)
 
 

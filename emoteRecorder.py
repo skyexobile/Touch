@@ -156,9 +156,11 @@ def manual_pause():
         isPlaying = False
         resume_time = pygame.mixer.music.get_pos()
         pygame.mixer.music.stop()
-    if(ctr%2==0):
-        isPlaying = True
+        print('player stopped')
         pygame.mixer.music.load(listofsongs[index])
+        print('music loaded')
+    else:
+        isPlaying = True
         start_time = resume_time/1000
         pygame.mixer.music.play(1,start_time)
 def load_settings():
