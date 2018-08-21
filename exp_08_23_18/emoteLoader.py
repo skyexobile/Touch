@@ -10,6 +10,11 @@ import pygame
 from mutagen.id3 import ID3
 import tkinter.messagebox
 
+if len(sys.argv) != 2:
+    print ("Correct usage: script, Participant ID")
+    exit()
+
+PID = str(sys.argv[1])
 pygame.mixer.init(44100, -16,2,2048)
 print("Connecting to Touch Output")
 #Niloofar's computer
@@ -188,7 +193,7 @@ def csv_writer(data2, path):
 def load_settings():
     global soft_value, medium_value, hard_value
     settings = []
-    with open("Settings.csv") as csv_file:
+    with open("DataFiles/" + PID + "Settings.csv") as csv_file:
         reader = csv.reader(csv_file, delimiter = '\n')
         #Here is where you should be reading through the file and sending values to output serial
         for row in reader:
