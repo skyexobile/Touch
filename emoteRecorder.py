@@ -15,16 +15,16 @@ pygame.mixer.init(44100, -16,2,2048)
 #Niloofar's computer
 #input_serial = serial.Serial('/dev/cu.usbmodem14431')
 #Angela's computer
-input_serial = serial.Serial('/dev/cu.usbmodem1411')
+'''input_serial = serial.Serial('/dev/cu.usbmodem1411')
 
 input_serial.setBaudrate(115200)
 print("Connected to Sensor")
 '''
-server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+#server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 #IP_address = str(sys.argv[1])
 #Port = int(sys.argv[2])server.connect(("localhost", 5000))
-'''
+
 soft_value = 100
 med_value = 500
 hard_value = 1000
@@ -262,9 +262,10 @@ def generate():
 def submit_demo():
     global demo_win
     global survey_response
-    global UIN, Age, PID
-    survey_response.append([UIN.get(), Age.get(), PID.get()])
-    print('saved ', survey_response)
+    global UIN, Age, PID, PID_value
+    print('saved ', [UIN.get(), Age.get(), PID.get()])
+    csv_writer_append([UIN.get(), Age.get(), PID.get()], "DemoResponses.csv")
+    PID_value = PID.get()
     demo_win.destroy()
 def demog():
     global UIN, Age, PID, demo_win
@@ -287,35 +288,35 @@ def demog():
     submit_button.pack()
 
 def survey(): # new window definition
-    global CheckVar1, CheckVar2,CheckVar3,CheckVar4,CheckVar5,CheckVar6, E1
+    global Sympathetic, Fear,Loving,Anger,Disgust,Surprise, E_value
     global newwin
     newwin = Toplevel(root)
     display = Label(newwin, text="What did you think the intent was?")
     display.pack()
-    CheckVar1 = IntVar()
-    CheckVar2 = IntVar()
-    CheckVar3 = IntVar()
-    CheckVar4 = IntVar()
-    CheckVar5 = IntVar()
-    CheckVar6 = IntVar()
-    C1 = Checkbutton(newwin, text = "Sympathetic", variable = CheckVar1, \
+    Sympathetic = IntVar()
+    Fear = IntVar()
+    Loving = IntVar()
+    Anger = IntVar()
+    Disgust = IntVar()
+    Surprise = IntVar()
+    C1 = Checkbutton(newwin, text = "Sympathetic", variable = Sympathetic, \
                  onvalue = 1, offvalue = 0, height=2, \
                  width = 20, )
-    C2 = Checkbutton(newwin, text = "Fear", variable = CheckVar2, \
+    C2 = Checkbutton(newwin, text = "Fear", variable = Fear, \
                  onvalue = 1, offvalue = 0, height=2, \
                  width = 20)
-    C3 = Checkbutton(newwin, text = "Loving", variable = CheckVar3, \
+    C3 = Checkbutton(newwin, text = "Loving", variable = Loving, \
                  onvalue = 1, offvalue = 0, height=2, \
                  width = 20, )
-    C4 = Checkbutton(newwin, text = "Anger", variable = CheckVar4, \
+    C4 = Checkbutton(newwin, text = "Anger", variable = Anger, \
                  onvalue = 1, offvalue = 0, height=2, \
                  width = 20)
 
-    C5 = Checkbutton(newwin, text = "disgust", variable = CheckVar5, \
+    C5 = Checkbutton(newwin, text = "Disgust", variable = Disgust, \
                  onvalue = 1, offvalue = 0, height=2, \
                  width = 20)
 
-    C6 = Checkbutton(newwin, text = "Surprise", variable = CheckVar6, \
+    C6 = Checkbutton(newwin, text = "Surprise", variable = Surprise, \
                  onvalue = 1, offvalue = 0, height=2, \
                  width = 20)
 
@@ -327,17 +328,16 @@ def survey(): # new window definition
     C6.pack()
     L1 = Label(newwin, text = "Other")
     L1.pack()
-    E1 = Entry(newwin)
-    E1.pack()
+    E_value = Entry(newwin)
+    E_value.pack()
     submit_button =Button(newwin, text ="Submit", command =submit_response) #command linked
     submit_button.pack()
     #submit_button.pack()
 def submit_response():
-    global CheckVar1, CheckVar2,CheckVar3,CheckVar4, CheckVar5,CheckVar6,newwin, E1, isPlaying
-    global survey_response, media_time
-    #survey_response.append([media_time, CheckVar1.get(), CheckVar2.get(), CheckVar3.get(), CheckVar4.get(), CheckVar5.get(), CheckVar6.get(), E1.get()])
+    global Sympathetic, Fear,Loving,Anger, Disgust,Surprise,newwin, E_value, isPlaying
+    global survey_response, media_time, PID_value, touchFile
+    csv_writer_append([media_time,Sympathetic.get(), Fear.get(),Loving.get(),Anger.get(), Disgust.get(),Surprise.get(),E_value.get()], (PID_value + "_" + str(touchFile)+ "_Responses.csv"))
     newwin.destroy()
-    #print ('submitted ', [media_time, CheckVar1.get(), CheckVar2.get(), CheckVar3.get(), CheckVar4.get(), CheckVar5.get(), CheckVar6.get(), E1.get()])
     manual_pause()
 
 reset_button =  tk.Button(root, text = "Reset Sensor", command = reset)
@@ -364,8 +364,6 @@ v =tk.StringVar()
 songlabel =tk.Label(root,textvariable=v,width=80)
 index=0
 count=0
-global touchFile
-touchFile = "touches.csv"
 global ctr
 ctr=0
 global freq
@@ -399,7 +397,7 @@ def playsong(event):
 
 
 def nextsong(event):
-    global index
+    global index, touchFile
     index += 1
     if (index < count):
         pygame.mixer.music.load(listofsongs[index])
@@ -595,16 +593,15 @@ stopbutton.bind("<Button-1>",stopsong)
 pausebutton.bind("<Button-1>",pausesong)
 
 root.update()
-'''
-This is the one Niloofar is using
-def csv_writer(data, path):
+
+def csv_writer_append(item, path):
     with open(path, "a", newline = '') as csv_file:
         writer = csv.writer(csv_file, delimiter = ' ')
-        for value in data:
+        for value in item:
             csv_file.write(str(value) + ',')
-        csv_file.write('\r\n')
+        csv_file.write('\n')
         csv_file.close()
-'''
+
 def csv_writer(data, path):
     with open(path, "w", newline = '') as csv_file:
         writer = csv.writer(csv_file, delimiter = ' ')
@@ -614,9 +611,11 @@ def csv_writer(data, path):
 offset = 0
 data = []
 demog()
+csv_writer_append(["Media Time", "Sympathetic", "Fear", "Loving", "Anger", "Disgust", "Surprise","Other"], (PID_value + "_" + str(touchFile)+ "_Responses.csv"))
+
 while True:
     # a.encode('utf-8').strip()
-    value = (input_serial.readline().decode())
+    '''value = (input_serial.readline().decode())
     try:
         input_value = float(value) + offset
     except:
@@ -645,9 +644,10 @@ while True:
         #csv_writer(data,'touches.csv')
 
 
-
+    '''
     #server.send(message.encode())
     root.update()
+
 
 
 # server.close()
