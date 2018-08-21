@@ -148,7 +148,7 @@ def set_hard():
 def save_settings():
     global soft_value, med_value, hard_value, PID_value
     settings = [soft_value, med_value, hard_value]
-    csv_writer(settings, "DataFiles/" + PID_value + "_Settings.csv")
+    csv_writer(settings, "DataFiles/" + PID_value + "/Settings.csv")
 def manual_pause():
     global ctr, isPlaying, resume_time
     ctr += 1
@@ -336,7 +336,7 @@ def survey(): # new window definition
 def submit_response():
     global Sympathetic, Fear,Loving,Anger, Disgust,Surprise,newwin, E_value, isPlaying
     global survey_response, media_time, PID_value, touchFile
-    csv_writer_append([media_time,Sympathetic.get(), Fear.get(),Loving.get(),Anger.get(), Disgust.get(),Surprise.get(),E_value.get()], ("DataFiles/" + PID_value + "_" + str(touchFile)+ "_Responses.csv"))
+    csv_writer_append([media_time,Sympathetic.get(), Fear.get(),Loving.get(),Anger.get(), Disgust.get(),Surprise.get(),E_value.get()], ("DataFiles/" + PID_value + "/" + str(touchFile)+ "_Responses.csv"))
     newwin.destroy()
     manual_pause()
 
@@ -611,7 +611,7 @@ def csv_writer(data, path):
 offset = 0
 data = []
 demog()
-csv_writer_append(["Media Time", "Sympathetic", "Fear", "Loving", "Anger", "Disgust", "Surprise","Other"], ("DataFiles/" + PID_value + "_" + str(touchFile)+ "_Responses.csv"))
+csv_writer_append(["Media Time", "Sympathetic", "Fear", "Loving", "Anger", "Disgust", "Surprise","Other"], ("DataFiles/" + PID_value + "/" + str(touchFile)+ "_Responses.csv"))
 
 while True:
     # a.encode('utf-8').strip()
@@ -637,7 +637,7 @@ while True:
         data.append(message)
         print('this is being appended ', message)
         #print(touchFile)
-        csv_writer(data, "DataFiles/" + touchFile)
+        csv_writer(data, "DataFiles/" +PID_value+"/"+ touchFile)
 
         #data = [time,input_value]
         #print(data)
