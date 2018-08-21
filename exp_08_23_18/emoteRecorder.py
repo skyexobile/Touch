@@ -147,6 +147,15 @@ def set_hard():
     hard_value = sum(max_list)/len(max_list)
 def save_settings():
     global soft_value, med_value, hard_value, PID_value
+        if soft_value > med_value:
+            temp = soft_value
+            soft_value = med_value
+            med_value = temp
+        if med_value > hard_value
+            temp = med_value
+            med_value = hard_value
+            hard_value = temp
+
     settings = [soft_value, med_value, hard_value]
     csv_writer(settings, "DataFiles/" + PID_value + "/Settings.csv")
 def manual_pause():
@@ -164,9 +173,9 @@ def manual_pause():
         start_time = resume_time/1000
         pygame.mixer.music.play(1,start_time)
 def load_settings():
-    global soft_value, medium_value, hard_value
+    global soft_value, medium_value, hard_value, PID_value
     settings = []
-    with open("Settings.csv") as csv_file:
+    with open("DataFiles/" + PID_value + "Settings.csv") as csv_file:
         reader = csv.reader(csv_file, delimiter = '\n')
         #Here is where you should be reading through the file and sending values to output serial
         for row in reader:
