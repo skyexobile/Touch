@@ -215,7 +215,7 @@ def generate():
     pygame.mixer.music.play()
     while True:
         root.update()
-        if(isPlaying and len(data) >0):
+        while(isPlaying and len(data) >0):
             input_value = data[0]
             last_value = data[-1]
             print("last value is " + last_value)
@@ -229,8 +229,8 @@ def generate():
             print("media time is" + str(data_time))
             #print("media time is ", media_time)
             #print('data time is ', data_time)
-            while (float(data_time) - float(media_time)) > 30:
-                media_time = pygame.mixer.music.get_pos()
+            while (float(data_time) - float(media_time+start_time)) > 30:
+                media_time = pygame.mixer.music.get_pos()+start_time
                 if media_time == -1:
                     print("stuck and media time is -1")
                 else:
@@ -279,12 +279,13 @@ def generate():
                 acquired_flag = False
             previous_read = float(input_value)
             del data[0]
-        else:
-            print("reached EOF")
-            if isPlaying == False:
-                print("isplaying is false")
-            elif len(data)<=0:
-                print("data ended")
+        # else:
+        print("reached EOF")
+        if isPlaying == False:
+            print("isplaying is false")
+        elif len(data)<=0:
+            break
+            print("data ended")
 
 def submit_demo():
     global demo_win
