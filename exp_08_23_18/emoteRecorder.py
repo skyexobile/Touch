@@ -24,7 +24,7 @@ print("Connected to Sensor")
 
 #IP_address = str(sys.argv[1])
 #Port = int(sys.argv[2])server.connect(("localhost", 5000))
-
+start_time = 0
 soft_value = 100
 med_value = 500
 hard_value = 1000
@@ -158,9 +158,9 @@ def save_settings():
         hard_value = temp
 
     settings = [soft_value, med_value, hard_value]
-    csv_writer(settings, "DataFiles/" + PID_value + "/Settings.csv")
+    csv_writer(settings, "Emotional music/DataFiles/" + PID_value + "/Settings.csv")
 def manual_pause():
-    global ctr, isPlaying, resume_time
+    global ctr, isPlaying, resume_time, media_time, start_time
     ctr += 1
     if (ctr%2!=0):
         isPlaying = False
@@ -171,12 +171,17 @@ def manual_pause():
         print('music loaded')
     else:
         isPlaying = True
+        print('player resumed')
         start_time = resume_time/1000
-        pygame.mixer.music.play(1,start_time)
+        print("start time is " + start_time)
+        # media_time = start_time + media_time
+        # pygame.mixer.music.rewind()
+        pygame.mixer.music.play(0,start_time)
+
 def load_settings():
     global soft_value, medium_value, hard_value, PID_value
     settings = []
-    with open("DataFiles/" + PID_value + "Settings.csv") as csv_file:
+    with open("Emotional music/DataFiles/" + PID_value + "/Settings.csv") as csv_file:
         reader = csv.reader(csv_file, delimiter = '\n')
         #Here is where you should be reading through the file and sending values to output serial
         for row in reader:
@@ -195,7 +200,7 @@ def load_settings():
 
 
 def generate():
-    global acquired_flag, soft_value, medium_value, hard_value
+    global acquired_flag, soft_value, medium_value, hard_value, start_time
     global previous_read
     global isPlaying
     global media_time
@@ -212,16 +217,24 @@ def generate():
         root.update()
         if(isPlaying and len(data) >0):
             input_value = data[0]
-            media_time = pygame.mixer.music.get_pos()
+            last_value = data[-1]
+            print("last value is " + last_value)
+            media_time = pygame.mixer.music.get_pos()+start_time
+            print("media time is" + str(media_time))
             # if pygame.mixer.music.get_busy():
             #     media_time = pygame.mixer.music.get_pos()
             # else:
             #     media_time = 0
             data_time = input_value[:input_value.find(',')]
+            print("media time is" + str(data_time))
             #print("media time is ", media_time)
             #print('data time is ', data_time)
             while (float(data_time) - float(media_time)) > 30:
                 media_time = pygame.mixer.music.get_pos()
+                if media_time == -1:
+                    print("stuck and media time is -1")
+                else:
+                    print("waiting and media time is " + str(media_time/1000))
                 # if pygame.mixer.music.get_busy():
                 #     print("waiting in loop")
                 #     media_time = pygame.mixer.music.get_pos()
@@ -230,8 +243,7 @@ def generate():
                 #     media_time = 0
                 #     print("still waiting")
                 # media_time = pygame.mixer.music.get_pos()
-                if media_time == -1:
-                    print("media time is -1")
+
 
             input_value = (input_value[input_value.find(',')+1:])
             #print(time.time())
@@ -265,10 +277,15 @@ def generate():
                     print('is playing is ', isPlaying)
                     survey()
                 acquired_flag = False
-
-
             previous_read = float(input_value)
             del data[0]
+        else:
+            print("reached EOF")
+            if isPlaying == False:
+                print("isplaying is false")
+            elif len(data)<=0:
+                print("data ended")
+
 def submit_demo():
     global demo_win
     global survey_response
@@ -468,6 +485,7 @@ def directorychooser():
  global count
  global index
  global touchFile
+ global path2
     #count=0
  load_settings()
  directory = askdirectory()
@@ -501,6 +519,8 @@ def directorychooser():
         realnames.reverse()
         pygame.mixer.music.load(listofsongs[0])
         touchFile = touchFileNames[0]
+        csv_writer_append(["Media Time", "Sympathetic", "Fear", "Loving", "Anger", "Disgust", "Surprise","Other"], path2 + str(touchFile)+ "_Responses.csv")
+        print("touchfile is set")
         for items in realnames:
             listbox.insert(0, items)
         for i in listofsongs:
@@ -618,11 +638,12 @@ def csv_writer(data, path):
 offset = 0
 data = []
 PID_value = "1"
-touchFile = ""
+# touchFile = ""
 demog()
 path = "Emotional music/DataFiles/" + PID_value + "/"
+path2 = "DataFiles/" + PID_value + "/"
 #myFile = open(path, 'a')
-csv_writer_append(["Media Time", "Sympathetic", "Fear", "Loving", "Anger", "Disgust", "Surprise","Other"], path + str(touchFile)+ "_Responses.csv")
+# csv_writer_append(["Media Time", "Sympathetic", "Fear", "Loving", "Anger", "Disgust", "Surprise","Other"], path + str(touchFile)+ "_Responses.csv")
 
 while True:
     # a.encode('utf-8').strip()
