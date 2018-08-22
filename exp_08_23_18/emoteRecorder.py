@@ -148,14 +148,14 @@ def set_hard():
     hard_value = sum(max_list)/len(max_list)
 def save_settings():
     global soft_value, med_value, hard_value, PID_value
-        if soft_value > med_value:
-            temp = soft_value
-            soft_value = med_value
-            med_value = temp
-        if med_value > hard_value
-            temp = med_value
-            med_value = hard_value
-            hard_value = temp
+    if soft_value > med_value:
+        temp = soft_value
+        soft_value = med_value
+        med_value = temp
+    if med_value > hard_value:
+        temp = med_value
+        med_value = hard_value
+        hard_value = temp
 
     settings = [soft_value, med_value, hard_value]
     csv_writer(settings, "DataFiles/" + PID_value + "/Settings.csv")
@@ -617,8 +617,12 @@ def csv_writer(data, path):
         csv_file.close()
 offset = 0
 data = []
+PID_value = "1"
+touchFile = ""
 demog()
-csv_writer_append(["Media Time", "Sympathetic", "Fear", "Loving", "Anger", "Disgust", "Surprise","Other"], ("DataFiles/" + PID_value + "/" + str(touchFile)+ "_Responses.csv"))
+path = "Emotional music/DataFiles/" + PID_value + "/"
+#myFile = open(path, 'a')
+csv_writer_append(["Media Time", "Sympathetic", "Fear", "Loving", "Anger", "Disgust", "Surprise","Other"], path + str(touchFile)+ "_Responses.csv")
 
 while True:
     # a.encode('utf-8').strip()
