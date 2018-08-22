@@ -6,12 +6,12 @@ import tkinter as tk
 from tkinter import*
 import csv
 
-print("Connecting to Load Cell")
+print("Connecting to Touch Input")
 input_serial = serial.Serial('/dev/cu.usbmodem1421')
 input_serial.setBaudrate(115200)
 input_serial.setDTR(False)
 input_serial.setRTS(False)
-'''
+
 print("Connecting to Touch Output")
 output_serial = serial.Serial('/dev/cu.usbmodem1411')
 output_serial.setBaudrate(115200)
@@ -20,8 +20,8 @@ output_serial.setDTR(False)
 output_serial.setRTS(False)
 
 
-'''
-print("Connected to Sensor")
+
+print("Connected!")
 
 #server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -215,6 +215,13 @@ def save_settings():
     print("hard is ", hard_value)
     '''
 
+def sample():
+    output_serial.write(str(4).encode())
+    output_serial.readline().decode()
+    output_serial.write(str(5).encode())
+    output_serial.readline().decode()
+    output_serial.write(str(6).encode())
+    output_serial.readline().decode()
 def generate():
     global acquired_flag, soft_value, medium_value, hard_value
     global previous_read, offset
@@ -236,30 +243,28 @@ def generate():
                 value = (input_serial.readline().decode())
                 input_value = float(value) + offset
         print(input_value)
-            #print(time.time())
-            #check this is the last release
         if( float(input_value) >= soft_value-10 and float(input_value) < medium_value  ):
             print("soft squeeze")
             initial_read = (input_value)
-            #output_serial.write(str(1).encode())
-            #output_serial.readline().decode()
+            output_serial.write(str(1).encode())
+            output_serial.readline().decode()
             acquired_flag = True
         elif( float(input_value) >= medium_value and float(input_value) <hard_value ):
             print("medium squeeze")
             initial_read = (input_value)
-            #output_serial.write(str(2).encode())
-            #output_serial.readline().decode()
+            output_serial.write(str(2).encode())
+            output_serial.readline().decode()
             acquired_flag = True
         elif( float(input_value) >= hard_value):
             print("hard squeeze")
             initial_read = float(input_value)
-            #output_serial.write(str(3).encode())
-            #output_serial.readline().decode()
+            output_serial.write(str(3).encode())
+            output_serial.readline().decode()
             acquired_flag = True
         elif(acquired_flag and (previous_read - float(input_value) >=3)):
             print('release')
-            #output_serial.write(str(0).encode())
-            #output_serial.readline().decode()
+            output_serial.write(str(0).encode())
+            output_serial.readline().decode()
 
             acquired_flag = False
 
@@ -271,6 +276,7 @@ medium_button =  tk.Button(root, text = "Define Medium", command = set_medium)
 hard_button  =  tk.Button(root, text = "Define Hard", command = set_hard)
 save_button  =  tk.Button(root, text = "Save Settings", command = save_settings)
 playback_button  =  tk.Button(root, text = "Activate Device", command = generate)
+sample_button= tk.Button(root, text = "Sample Squeezes", command = sample)
 
 reset_button.pack(side = tk.BOTTOM)
 soft_button.pack(side = tk.BOTTOM)
@@ -278,13 +284,9 @@ medium_button.pack(side = tk.BOTTOM)
 hard_button.pack(side = tk.BOTTOM)
 save_button.pack(side = tk.BOTTOM)
 playback_button.pack()
-
-
-
-
+sample_button.pack()
 
 root.update()
-
 
 while True:
     root.update()
