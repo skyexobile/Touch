@@ -39,6 +39,7 @@ def toSurvey():
     print("surveyMode is now ", surveyMode)
 def reset():
     input_serial.write(str("0").encode())
+    offset = 0
 def set_soft():
     print('soft function')
     offset = 0
@@ -549,9 +550,6 @@ songlabel.pack()
 # submit.pack(side = tk.TOP)
 root.update()
 
-path = "Output_ST2.csv"
-myFile = open(path, 'a')
-myFile.write(str(time.strftime("%X")))
 print('Time: ' + str(time.strftime("%X")))
 flag = False
 timeBegin = time.time()

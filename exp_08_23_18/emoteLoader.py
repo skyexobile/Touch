@@ -208,9 +208,6 @@ def load_settings():
     hard_value = float(hard_value)
     print('soft is ', soft_value, ' medium is ', medium_value, ' hard is ', hard_value)
 
-path = "Output_ST.csv"
-myFile = open(path, 'a')
-
 root = tk.Tk()
 
 flag = False
