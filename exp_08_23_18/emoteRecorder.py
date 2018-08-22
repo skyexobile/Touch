@@ -618,7 +618,7 @@ def csv_writer(data, path):
 offset = 0
 data = []
 PID_value = "1"
-touchFile = ""
+touchFile = "n"
 demog()
 path = "Emotional music/DataFiles/" + PID_value + "/"
 #myFile = open(path, 'a')
