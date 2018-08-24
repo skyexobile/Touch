@@ -176,6 +176,8 @@ def survey(): # new window definition
     E1.pack()
     submit_button =Button(newwin, text ="Submit", command =submit_response) #command linked
     submit_button.pack()
+    while surveyFlag is False:
+        root.update()
     #submit_button.pack()
 def submit_response():
     global CheckVar1, CheckVar2,CheckVar3,CheckVar4, CheckVar5,CheckVar6,newwin, E1, isPlaying
