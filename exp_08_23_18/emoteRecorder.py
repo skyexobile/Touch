@@ -164,19 +164,23 @@ def manual_pause():
     ctr += 1
     if (ctr%2!=0):
         isPlaying = False
-        resume_time = pygame.mixer.music.get_pos()
+        if start_time == 0:
+            resume_time = pygame.mixer.music.get_pos()
+        else:
+            resume_time = pygame.mixer.music.get_pos()  + resume_time
         pygame.mixer.music.stop()
         print('player stopped')
         pygame.mixer.music.load(listofsongs[index])
         print('music loaded')
+        print("resume time is ", resume_time/1000)
     else:
         isPlaying = True
         print('player resumed')
-        start_time = resume_time/1000
-        print("start time is " + start_time)
-        # media_time = start_time + media_time
-        # pygame.mixer.music.rewind()
-        pygame.mixer.music.play(0,start_time)
+        start_time = resume_time/1000.0
+        print("start time is ", start_time)
+        media_time = start_time + media_time
+        print("music time set")
+        pygame.mixer.music.play(0, start_time)
 
 def load_settings():
     global soft_value, medium_value, hard_value, PID_value
@@ -219,18 +223,25 @@ def generate():
             input_value = data[0]
             last_value = data[-1]
             print("last value is " + last_value)
-            media_time = pygame.mixer.music.get_pos()+start_time
-            print("media time is" + str(media_time))
+            media_time = pygame.mixer.music.get_pos()
+            w_sum = (float(media_time) + (float(start_time)*1000))
+            media_time = w_sum
+            print("media time is" + str(media_time/1000))
+            print("start time is" + str(start_time))
             # if pygame.mixer.music.get_busy():
             #     media_time = pygame.mixer.music.get_pos()
             # else:
             #     media_time = 0
             data_time = input_value[:input_value.find(',')]
-            print("media time is" + str(data_time))
+            print("data time is" + str(data_time))
             #print("media time is ", media_time)
             #print('data time is ', data_time)
             while (float(data_time) - float(media_time+start_time)) > 30:
-                media_time = pygame.mixer.music.get_pos()+start_time
+                media_time = pygame.mixer.music.get_pos()
+                w_sum = (float(media_time) + (float(start_time)*1000))
+                media_time = w_sum
+                print("w_media time is" + str(media_time/1000))
+                print("w_start time is" + str(start_time))
                 if media_time == -1:
                     print("stuck and media time is -1")
                 else:
@@ -273,16 +284,20 @@ def generate():
                 #output_serial.readline().decode()
                 if surveyMode:
                     manual_pause()
-                    isPlaying = False
-                    print('is playing is ', isPlaying)
+                    #isPlaying = False
+                    print('before survy is playing is ', isPlaying)
                     survey()
+                    #isPlaying = True
+                    print('after survy is playing is ', isPlaying)
+
                 acquired_flag = False
             previous_read = float(input_value)
             del data[0]
         # else:
-        print("reached EOF")
+        #print("reached EOF")
         if isPlaying == False:
-            print("isplaying is false")
+            break
+            #print("isplaying is false")
         elif len(data)<=0:
             break
             print("data ended")
@@ -317,7 +332,8 @@ def demog():
 
 def survey(): # new window definition
     global Sympathetic, Fear,Loving,Anger,Disgust,Surprise, E_value
-    global newwin
+    global newwin, surveyFlag
+    surveyFlag = False
     newwin = Toplevel(root)
     display = Label(newwin, text="What did you think the intent was?")
     display.pack()
@@ -360,14 +376,18 @@ def survey(): # new window definition
     E_value.pack()
     submit_button =Button(newwin, text ="Submit", command =submit_response) #command linked
     submit_button.pack()
+    while surveyFlag is False:
+        root.update()
+
     #submit_button.pack()
 def submit_response():
     global Sympathetic, Fear,Loving,Anger, Disgust,Surprise,newwin, E_value, isPlaying
-    global survey_response, media_time, PID_value, touchFile
+    global survey_response, media_time, PID_value, touchFile, surveyFlag
     csv_writer_append([media_time,Sympathetic.get(), Fear.get(),Loving.get(),Anger.get(), Disgust.get(),Surprise.get(),E_value.get()], ("DataFiles/" + PID_value + "/" + str(touchFile)+ "_Responses.csv"))
     newwin.destroy()
     manual_pause()
-
+    surveyFlag = True
+    print('survey flag is ', surveyFlag)
 reset_button =  tk.Button(root, text = "Reset Sensor", command = reset)
 soft_button =  tk.Button(root, text = "Define Soft", command = set_soft)
 medium_button =  tk.Button(root, text = "Define Medium", command = set_medium)
