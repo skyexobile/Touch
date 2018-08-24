@@ -216,7 +216,7 @@ def generate():
             data.append(', '.join(row))
     global isPlaying
     isPlaying = True
-    pygame.mixer.music.play()
+    pygame.mixer.music.play(0,0)
     while True:
         root.update()
         while(isPlaying and len(data) >0):
@@ -260,37 +260,38 @@ def generate():
             #print(time.time())
             #check this is the last release
             print(float(input_value))
+            if(acquired_flag and (previous_read - float(input_value) >=3)):
+                print('release')
+                output_serial.write(str(0).encode())
+                output_serial.readline().decode()
+                while input_value >(soft_value):
+                    del data[0]
+                    input_value = data[0]
+                    input_value = (input_value[input_value.find(',')+1:])
+                if surveyMode:
+                    manual_pause()
+                    isPlaying = False
+                    print('is playing is ', isPlaying)
+                    survey()
+                acquired_flag = False
             if( float(input_value) >= soft_value-10 and float(input_value) < medium_value  ):
                 print("soft squeeze")
                 initial_read = (input_value)
-                #output_serial.write(str(1).encode())
-                #output_serial.readline().decode()
+                output_serial.write(str(1).encode())
+                output_serial.readline().decode()
                 acquired_flag = True
             elif( float(input_value) >= medium_value and float(input_value) <hard_value ):
                 print("medium squeeze")
                 initial_read = (input_value)
-                #output_serial.write(str(2).encode())
-                #output_serial.readline().decode()
+                output_serial.write(str(2).encode())
+                output_serial.readline().decode()
                 acquired_flag = True
             elif( float(input_value) >= hard_value):
                 print("hard squeeze")
                 initial_read = float(input_value)
-                #output_serial.write(str(3).encode())
-                #output_serial.readline().decode()
+                output_serial.write(str(3).encode())
+                output_serial.readline().decode()
                 acquired_flag = True
-            elif(acquired_flag and (previous_read - float(input_value) >=3)):
-                print('release')
-                #output_serial.write(str(0).encode())
-                #output_serial.readline().decode()
-                if surveyMode:
-                    manual_pause()
-                    #isPlaying = False
-                    print('before survy is playing is ', isPlaying)
-                    survey()
-                    #isPlaying = True
-                    print('after survy is playing is ', isPlaying)
-
-                acquired_flag = False
             previous_read = float(input_value)
             del data[0]
         # else:
@@ -440,7 +441,7 @@ def pausesong(event):
 def playsong(event):
     # print(touchFileNames)
     isPlaying = True
-    pygame.mixer.music.play()
+    pygame.mixer.music.play(0,0)
 
 
 
@@ -451,13 +452,13 @@ def nextsong(event):
         pygame.mixer.music.load(listofsongs[index])
         touchFile = touchFileNames[index]
         isPlaying = True
-        pygame.mixer.music.play()
+        pygame.mixer.music.play(0,0)
     else:
         index = 0
         pygame.mixer.music.load(listofsongs[index])
         touchFile = touchFileNames[index]
         isPlaying = True
-        pygame.mixer.music.play()
+        pygame.mixer.music.play(0,0)
     try:
       updatelabel()
     except NameError:
@@ -469,7 +470,7 @@ def previoussong(event):
     pygame.mixer.music.load(listofsongs[index])
     touchFile = touchFileNames[index]
     isPlaying = True
-    pygame.mixer.music.play()
+    pygame.mixer.music.play(0,0)
     try:
         updatelabel()
     except NameError:
@@ -668,14 +669,14 @@ path2 = "DataFiles/" + PID_value + "/"
 
 while True:
     # a.encode('utf-8').strip()
-    '''value = (input_serial.readline().decode())
+    value = (input_serial.readline().decode())
     try:
         input_value = float(value) + offset
     except:
         value = (input_serial.readline().decode())
         input_value = float(value) + offset
 
-    if input_value <-20:
+    if input_value <-5:
         offset = offset -input_value
         try:
             input_value = float(value) + offset
@@ -697,7 +698,7 @@ while True:
         #csv_writer(data,'touches.csv')
 
 
-    '''
+
     #server.send(message.encode())
     root.update()
 

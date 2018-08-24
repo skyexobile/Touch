@@ -20,13 +20,13 @@ print("Connecting to Touch Output")
 #Niloofar's computer
 #output_serial = serial.Serial('/dev/cu.usbmodem14631')
 #Angela's computer
-'''
+
 output_serial = serial.Serial('/dev/cu.usbmodem1411')
 output_serial.setBaudrate(115200)
 
 output_serial.setDTR(False)
 output_serial.setRTS(False)
-'''
+
 surveyMode = False
 mappingData = []
 type = 0
@@ -97,37 +97,38 @@ def generate():
     input_value = (input_value[input_value.find(',')+1:])
     #print(time.time())
     #check this is the last release
-    print(soft_value)
-    if( float(input_value) >= soft_value-10 and float(input_value) < medium_value  ):
-        print("soft squeeze")
-        initial_read = (input_value)
-        #output_serial.write(str(1).encode())
-        #output_serial.readline().decode()
-        acquired_flag = True
-    elif( float(input_value) >= medium_value and float(input_value) <hard_value ):
-        print("medium squeeze")
-        initial_read = (input_value)
-        #output_serial.write(str(2).encode())
-        #output_serial.readline().decode()
-        acquired_flag = True
-    elif( float(input_value) >= hard_value):
-        print("hard squeeze")
-        initial_read = float(input_value)
-        #output_serial.write(str(3).encode())
-        #output_serial.readline().decode()
-        acquired_flag = True
-    elif(acquired_flag and (previous_read - float(input_value) >=3)):
+    if(acquired_flag and (previous_read - float(input_value) >=3)):
         print('release')
-        #output_serial.write(str(0).encode())
-        #output_serial.readline().decode()
+        output_serial.write(str(0).encode())
+        output_serial.readline().decode()
+        while float(input_value) >(soft_value):
+            del data[0]
+            input_value = data[0]
+            input_value = (input_value[input_value.find(',')+1:])
         if surveyMode:
             manual_pause()
             isPlaying = False
             print('is playing is ', isPlaying)
             survey()
         acquired_flag = False
-
-
+    elif( float(input_value) >= soft_value-10 and float(input_value) < medium_value  ):
+        print("soft squeeze")
+        initial_read = (input_value)
+        output_serial.write(str(1).encode())
+        output_serial.readline().decode()
+        acquired_flag = True
+    elif( float(input_value) >= medium_value and float(input_value) <hard_value ):
+        print("medium squeeze")
+        initial_read = (input_value)
+        output_serial.write(str(2).encode())
+        output_serial.readline().decode()
+        acquired_flag = True
+    elif( float(input_value) >= hard_value):
+        print("hard squeeze")
+        initial_read = float(input_value)
+        output_serial.write(str(3).encode())
+        output_serial.readline().decode()
+        acquired_flag = True
     previous_read = float(input_value)
     del data[0]
 def survey(): # new window definition
@@ -193,7 +194,7 @@ def csv_writer(data2, path):
 def load_settings():
     global soft_value, medium_value, hard_value
     settings = []
-    with open("DataFiles/" + PID + "Settings.csv") as csv_file:
+    with open("Emotional music/DataFiles/" + PID + "/Settings.csv") as csv_file:
         reader = csv.reader(csv_file, delimiter = '\n')
         #Here is where you should be reading through the file and sending values to output serial
         for row in reader:
@@ -259,7 +260,7 @@ def pausesong(event):
         isPlaying = True
         pygame.mixer.music.load(listofsongs[index])
         start_time = resume_time/1000
-        pygame.mixer.music.play(1,start_time)
+        pygame.mixer.music.play(0,start_time)
 
 
 
@@ -278,14 +279,14 @@ def manual_pause():
         isPlaying = True
         start_time = resume_time/1000
         print('start time is ', start_time)
-        pygame.mixer.music.play(1,start_time)
+        pygame.mixer.music.play(0,start_time)
 
 
 
 def playsong(event):
     global isPlaying
     isPlaying = True
-    pygame.mixer.music.play()
+    pygame.mixer.music.play(0,0)
     print("play is pressed")
     #need to do something about generate() when music is paused
 
@@ -299,14 +300,14 @@ def nextsong(event):
         touchFile = touchFileNames[index]
         auto_load_file(touchFileNames[index])
         isPlaying = True
-        pygame.mixer.music.play()
+        pygame.mixer.music.play(0,0)
     else:
         index = 0
         pygame.mixer.music.load(listofsongs[index])
         touchFile = touchFileNames[index]
         auto_load_file(touchFileNames[index])
         isPlaying = True
-        pygame.mixer.music.play()
+        pygame.mixer.music.play(0,0)
     try:
       updatelabel()
     except NameError:
@@ -319,7 +320,7 @@ def previoussong(event):
     touchFile = touchFileNames[index]
     auto_load_file(touchFileNames[index])
     isPlaying = True
-    pygame.mixer.music.play()
+    pygame.mixer.music.play(0,0)
     try:
         updatelabel()
     except NameError:
