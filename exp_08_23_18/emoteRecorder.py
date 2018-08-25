@@ -15,13 +15,18 @@ pygame.mixer.init(44100, -16,2,2048)
 #Niloofar's computer
 #input_serial = serial.Serial('/dev/cu.usbmodem14431')
 #Angela's computer
-'''input_serial = serial.Serial('/dev/cu.usbmodem1411')
+'''
+input_serial = serial.Serial('/dev/cu.usbmodem1421')
 
 input_serial.setBaudrate(115200)
 print("Connected to Sensor")
-'''
-#server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+output_serial = serial.Serial('/dev/cu.usbmodem1411')
+output_serial.setBaudrate(115200)
 
+output_serial.setDTR(False)
+output_serial.setRTS(False)
+#server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+'''
 #IP_address = str(sys.argv[1])
 #Port = int(sys.argv[2])server.connect(("localhost", 5000))
 start_time = 0
@@ -38,116 +43,170 @@ def toSurvey():
     surveyMode = True
     print("surveyMode is now ", surveyMode)
 def reset():
+    global offset
     input_serial.write(str("0").encode())
     offset = 0
+    print("Reset Complete")
 def set_soft():
-    print('soft function')
-    offset = 0
+    print('Please provide three 2-second soft squeezes')
+    global offset
     value_list = []
     max_list = []
     global soft_value
     counter = 0
+    previous = -100
     while counter <3:
-        print('counter value ', counter)
         value = (input_serial.readline().decode())
         try:
             input_value = float(value) + offset
         except:
             value = (input_serial.readline().decode())
             input_value = float(value) + offset
-        print(input_value)
-        if input_value > 100:
-            while input_value >30:
+        #print(input_value)
+        if input_value > 50:
+            while (previous - input_value) < 20:
                 value_list.append(input_value)
+                value = (input_serial.readline().decode())
+                try:
+                    new_input_value = float(value) + offset
+                except:
+                    value = (input_serial.readline().decode())
+                    new_input_value = float(value) + offset
+                #print(new_input_value)
+                previous = input_value
+                input_value = new_input_value
+                #print(new_input_value)
+
+            index = value_list.index(max(value_list))
+            for i in range(0, index):
+                max_list.append(value_list[i])
+            counter = counter +1
+
+            print("Trial " + str(counter) + " completed!")
+            value = (input_serial.readline().decode())
+            try:
+                input_value = float(value) + offset
+            except:
+                value = (input_serial.readline().decode())
+                input_value = float(value) + offset
+            while (previous - input_value) >5:
+                previous = input_value
                 value = (input_serial.readline().decode())
                 try:
                     input_value = float(value) + offset
                 except:
                     value = (input_serial.readline().decode())
                     input_value = float(value) + offset
-                print(input_value)
-
-            index = value_list.index(max(value_list))
-            max_list.append(value_list[index])
-            max_list.append(value_list[index+1])
-            max_list.append(value_list[index+2])
-            max_list.append(value_list[index+3])
-            counter = counter +1
-        elif input_value < -20:
+        elif input_value < -3:
             offset = offset - input_value
     soft_value = sum(max_list)/len(max_list)
+    print("Soft touches have been trained")
 def set_medium():
-    offset = 0
+    print('Please provide three 2-second medium squeezes')
+
+    global offset
     value_list = []
     max_list = []
-    global medium_value
+    global med_value
     counter = 0
+    previous = -100
     while counter <3:
-        print('counter value ', counter)
         value = (input_serial.readline().decode())
         try:
             input_value = float(value) + offset
         except:
             value = (input_serial.readline().decode())
             input_value = float(value) + offset
-        print(input_value)
+        #print(input_value)
         if input_value > 200:
-            while input_value >50:
+            while (previous - input_value) < 30:
                 value_list.append(input_value)
+                value = (input_serial.readline().decode())
+                try:
+                    new_input_value = float(value) + offset
+                except:
+                    value = (input_serial.readline().decode())
+                    new_input_value = float(value) + offset
+                #print(new_input_value)
+                previous = input_value
+                input_value = new_input_value
+
+            index = value_list.index(max(value_list))
+            for i in range(0, index):
+                max_list.append(value_list[i])
+            counter = counter +1
+            print("Trial " + str(counter) + " completed!")
+            value = (input_serial.readline().decode())
+            try:
+                input_value = float(value) + offset
+            except:
+                value = (input_serial.readline().decode())
+                input_value = float(value) + offset
+            while (previous - input_value) >5:
+                previous = input_value
                 value = (input_serial.readline().decode())
                 try:
                     input_value = float(value) + offset
                 except:
                     value = (input_serial.readline().decode())
                     input_value = float(value) + offset
-            print(input_value)
-
-            index = value_list.index(max(value_list))
-            max_list.append(value_list[index])
-            max_list.append(value_list[index+1])
-            max_list.append(value_list[index+2])
-            max_list.append(value_list[index+3])
-            counter = counter +1
-        elif input_value < -20:
+        elif input_value < -3:
             offset = offset - input_value
     med_value = sum(max_list)/len(max_list)
+    print("Medium touches have been trained")
 def set_hard():
-    offset = 0
+    global offset, hard_value
     value_list = []
     max_list = []
-    global hard_value
     counter = 0
+    previous = -10
+    print('Please provide three 2-second hard squeezes')
+
     while counter <3:
-        print('counter value ', counter)
         value = (input_serial.readline().decode())
         try:
             input_value = float(value) + offset
         except:
             value = (input_serial.readline().decode())
             input_value = float(value) + offset
-        print(input_value)
+        #print(input_value)
         if input_value > 400:
-            while input_value >40:
+            while (previous - input_value) < 30:
                 value_list.append(input_value)
+                value = (input_serial.readline().decode())
+                try:
+                    new_input_value = float(value) + offset
+                except:
+                    value = (input_serial.readline().decode())
+                    new_input_value = float(value) + offset
+                #print(new_input_value)
+                previous = input_value
+                input_value = new_input_value
+            index = value_list.index(max(value_list))
+            for i in range(0, index):
+                max_list.append(value_list[i])
+            counter = counter +1
+            print("Trial " + str(counter) + " completed!")
+            value = (input_serial.readline().decode())
+            try:
+                input_value = float(value) + offset
+            except:
+                value = (input_serial.readline().decode())
+                input_value = float(value) + offset
+            while (previous - input_value) >5:
+                previous = input_value
                 value = (input_serial.readline().decode())
                 try:
                     input_value = float(value) + offset
                 except:
                     value = (input_serial.readline().decode())
                     input_value = float(value) + offset
-            index = value_list.index(max(value_list))
-            max_list.append(value_list[index])
-            max_list.append(value_list[index+1])
-            max_list.append(value_list[index+2])
-            max_list.append(value_list[index+3])
-            counter = counter +1
-            print(input_value)
-
-        elif input_value < -20:
+        elif input_value < -3:
             offset = offset - input_value
     hard_value = sum(max_list)/len(max_list)
+    print("Hard touches have been trained")
 def save_settings():
-    global soft_value, med_value, hard_value, PID_value
+    global soft_value, med_value, hard_value, PID_value, medium_value
     if soft_value > med_value:
         temp = soft_value
         soft_value = med_value
@@ -156,9 +215,14 @@ def save_settings():
         temp = med_value
         med_value = hard_value
         hard_value = temp
+    medium_value = med_value
+    csv_writer([soft_value, medium_value, hard_value],"Emotional music/DataFiles/" + PID_value+"/Settings.csv")
+    print("Your settings have been saved!")
+    '''print("soft is ", soft_value)
+    print("medium is ", medium_value)
+    print("hard is ", hard_value)
+    '''
 
-    settings = [soft_value, med_value, hard_value]
-    csv_writer(settings, "Emotional music/DataFiles/" + PID_value + "/Settings.csv")
 def manual_pause():
     global ctr, isPlaying, resume_time, media_time, start_time
     ctr += 1
@@ -216,41 +280,51 @@ def generate():
             data.append(', '.join(row))
     global isPlaying
     isPlaying = True
-    pygame.mixer.music.play(0,0)
+    releaseFlag = True
+    pygame.mixer.music.play(0,float(0))
     while True:
         root.update()
         while(isPlaying and len(data) >0):
             input_value = data[0]
             last_value = data[-1]
-            print("last value is " + last_value)
+            #print("last value is " + last_value)
             media_time = pygame.mixer.music.get_pos()
             w_sum = (float(media_time) + (float(start_time)*1000))
             media_time = w_sum
-            print("media time is" + str(media_time/1000))
-            print("start time is" + str(start_time))
+            #print("media time is" + str(media_time/1000))
+            #print("start time is" + str(start_time))
             # if pygame.mixer.music.get_busy():
             #     media_time = pygame.mixer.music.get_pos()
             # else:
             #     media_time = 0
             data_time = input_value[:input_value.find(',')]
             print("data time is" + str(data_time))
-            #print("media time is ", media_time)
+            print("media time is ", media_time)
             #print('data time is ', data_time)
-            while (float(data_time) - float(media_time+start_time)) > 30:
+            diff = float(data_time) - float(media_time +start_time)
+            while abs(diff) > 30 and float(media_time) < float(data_time):
+                #print("diff is ", abs(diff))
                 media_time = pygame.mixer.music.get_pos()
-                w_sum = (float(media_time) + (float(start_time)*1000))
-                media_time = w_sum
-                print("w_media time is" + str(media_time/1000))
-                print("w_start time is" + str(start_time))
                 if media_time == -1:
                     print("stuck and media time is -1")
-                else:
-                    print("waiting and media time is " + str(media_time/1000))
+                    pygame.mixer.music.play(0,start_time)
+                    media_time = pygame.mixer.music.get_pos()
+
+
+
+                w_sum = (float(media_time) + (float(start_time)*1000))
+                media_time = w_sum
+                #print("w_media time is" + str(media_time/1000))
+                #print("w_start time is" + str(start_time))
+                #print("waiting and media time is " + str(media_time/1000))
                 # if pygame.mixer.music.get_busy():
                 #     print("waiting in loop")
                 #     media_time = pygame.mixer.music.get_pos()
                 #     print("media time is ", media_time)
-                # else:
+                diff = float(data_time) - float(media_time+start_time)
+
+
+
                 #     media_time = 0
                 #     print("still waiting")
                 # media_time = pygame.mixer.music.get_pos()
@@ -259,39 +333,51 @@ def generate():
             input_value = (input_value[input_value.find(',')+1:])
             #print(time.time())
             #check this is the last release
-            print(float(input_value))
+            print('value is ', input_value)
             if(acquired_flag and (previous_read - float(input_value) >=3)):
-                print('release')
-                output_serial.write(str(0).encode())
-                output_serial.readline().decode()
-                while input_value >(soft_value):
-                    del data[0]
-                    input_value = data[0]
-                    input_value = (input_value[input_value.find(',')+1:])
-                if surveyMode:
+                #print('release')
+                #output_serial.write(str(0).encode())
+                #output_serial.readline().decode()
+                if surveyMode and releaseFlag is False:
+                    print("survey here")
                     manual_pause()
                     isPlaying = False
                     print('is playing is ', isPlaying)
                     survey()
+                    print('after survey value is ', input_value)
+                    while(float(previous_read) > float(input_value)):
+                        #print('previous is ', previous_read)
+                        #print('current is ', input_value)
+                        del data[0]
+                        previous_read = input_value
+                        input_value = data[0]
+                        input_value = (input_value[input_value.find(',')+1:])
+                        data_time = input_value[:input_value.find(',')]
+
+                        #print("released data time is" + str(data_time))
+                    releaseFlag = True
                 acquired_flag = False
             if( float(input_value) >= soft_value-10 and float(input_value) < medium_value  ):
                 print("soft squeeze")
                 initial_read = (input_value)
-                output_serial.write(str(1).encode())
-                output_serial.readline().decode()
+                #output_serial.write(str(1).encode())
+                #output_serial.readline().decode()
                 acquired_flag = True
+                releaseFlag = False
             elif( float(input_value) >= medium_value and float(input_value) <hard_value ):
                 print("medium squeeze")
                 initial_read = (input_value)
-                output_serial.write(str(2).encode())
-                output_serial.readline().decode()
+                #output_serial.write(str(2).encode())
+                #output_serial.readline().decode()
                 acquired_flag = True
+                releaseFlag = False
             elif( float(input_value) >= hard_value):
                 print("hard squeeze")
                 initial_read = float(input_value)
-                output_serial.write(str(3).encode())
-                output_serial.readline().decode()
+                #output_serial.write(str(3).encode())
+                #output_serial.readline().decode()
                 acquired_flag = True
+                releaseFlag = False
             previous_read = float(input_value)
             del data[0]
         # else:
@@ -300,8 +386,11 @@ def generate():
             break
             #print("isplaying is false")
         elif len(data)<=0:
+            print('end of song')
+            pygame.mixer.music.stop()
             break
-            print("data ended")
+
+
 
 def submit_demo():
     global demo_win
@@ -384,7 +473,7 @@ def survey(): # new window definition
 def submit_response():
     global Sympathetic, Fear,Loving,Anger, Disgust,Surprise,newwin, E_value, isPlaying
     global survey_response, media_time, PID_value, touchFile, surveyFlag
-    csv_writer_append([media_time,Sympathetic.get(), Fear.get(),Loving.get(),Anger.get(), Disgust.get(),Surprise.get(),E_value.get()], ("DataFiles/" + PID_value + "/" + str(touchFile)+ "_Responses.csv"))
+    csv_writer_append([media_time,Sympathetic.get(), Fear.get(),Loving.get(),Anger.get(), Disgust.get(),Surprise.get(),E_value.get()], (str(touchFile)+ "_Responses.csv"))
     newwin.destroy()
     manual_pause()
     surveyFlag = True
@@ -441,7 +530,7 @@ def pausesong(event):
 def playsong(event):
     # print(touchFileNames)
     isPlaying = True
-    pygame.mixer.music.play(0,0)
+    pygame.mixer.music.play(0,0.0)
 
 
 
@@ -452,13 +541,13 @@ def nextsong(event):
         pygame.mixer.music.load(listofsongs[index])
         touchFile = touchFileNames[index]
         isPlaying = True
-        pygame.mixer.music.play(0,0)
+        pygame.mixer.music.play(0,0.0)
     else:
         index = 0
         pygame.mixer.music.load(listofsongs[index])
         touchFile = touchFileNames[index]
         isPlaying = True
-        pygame.mixer.music.play(0,0)
+        pygame.mixer.music.play(0,0.0)
     try:
       updatelabel()
     except NameError:
@@ -470,7 +559,7 @@ def previoussong(event):
     pygame.mixer.music.load(listofsongs[index])
     touchFile = touchFileNames[index]
     isPlaying = True
-    pygame.mixer.music.play(0,0)
+    pygame.mixer.music.play(0,0.0)
     try:
         updatelabel()
     except NameError:
@@ -506,7 +595,7 @@ def toggle():
 def directorychooser():
  global count
  global index
- global touchFile
+ global touchFile, PID_value
  global path2
     #count=0
  load_settings()
@@ -524,7 +613,7 @@ def directorychooser():
       if files.endswith('.mp3'):
           realdir = os.path.realpath(files)
           fileName = os.path.splitext(files)[0]
-          touchFileName = fileName + '.csv'
+          touchFileName = "DataFiles/"+PID_value+"/" +fileName + '.csv'
           audio = ID3(realdir)
           realnames.append(audio.get('TIT2', 'No Title'))
           listofsongs.append(files)
@@ -668,6 +757,7 @@ path2 = "DataFiles/" + PID_value + "/"
 # csv_writer_append(["Media Time", "Sympathetic", "Fear", "Loving", "Anger", "Disgust", "Surprise","Other"], path + str(touchFile)+ "_Responses.csv")
 
 while True:
+    '''
     # a.encode('utf-8').strip()
     value = (input_serial.readline().decode())
     try:
@@ -676,14 +766,14 @@ while True:
         value = (input_serial.readline().decode())
         input_value = float(value) + offset
 
-    if input_value <-5:
+    if input_value <-3:
         offset = offset -input_value
         try:
             input_value = float(value) + offset
         except:
             value = (input_serial.readline().decode())
             input_value = float(value) + offset
-    if pygame.mixer.music.get_busy() and ctr%2==0:
+    if pygame.mixer.music.get_busy() and ctr%2==0 and surveyMode is False:
         print('sending to csv!')
         time = pygame.mixer.music.get_pos()
         message =str(time) + "," + str(input_value)
@@ -691,14 +781,14 @@ while True:
         data.append(message)
         print('this is being appended ', message)
         #print(touchFile)
-        csv_writer(data, "DataFiles/" +PID_value+"/"+ touchFile)
+        csv_writer(data, touchFile)
 
         #data = [time,input_value]
         #print(data)
         #csv_writer(data,'touches.csv')
 
 
-
+'''
     #server.send(message.encode())
     root.update()
 
