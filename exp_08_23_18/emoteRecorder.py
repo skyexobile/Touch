@@ -15,7 +15,7 @@ pygame.mixer.init(44100, -16,2,2048)
 #Niloofar's computer
 #input_serial = serial.Serial('/dev/cu.usbmodem14431')
 #Angela's computer
-'''
+
 input_serial = serial.Serial('/dev/cu.usbmodem1421')
 
 input_serial.setBaudrate(115200)
@@ -26,7 +26,7 @@ output_serial.setBaudrate(115200)
 output_serial.setDTR(False)
 output_serial.setRTS(False)
 #server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-'''
+
 #IP_address = str(sys.argv[1])
 #Port = int(sys.argv[2])server.connect(("localhost", 5000))
 start_time = 0
@@ -38,8 +38,10 @@ data = []
 acquired_flag = False
 surveyMode = False
 survey_response = []
+receive_Mode = False
+
 def toSurvey():
-    global surveyMode
+    global surveyMode, touchFile
     surveyMode = True
     print("surveyMode is now ", surveyMode)
 def reset():
@@ -338,15 +340,12 @@ def generate():
             print('value is ', input_value)
             if(acquired_flag and (previous_read - float(input_value) >=3)):
                 #print('release')
-                #output_serial.write(str(0).encode())
-                #output_serial.readline().decode()
+                output_serial.write(str(0).encode())
+                output_serial.readline().decode()
                 if surveyMode and releaseFlag is False:
-                    print("survey here")
                     manual_pause()
                     isPlaying = False
-                    print('is playing is ', isPlaying)
                     survey()
-                    print('after survey value is ', input_value)
                     while(float(previous_read) > float(input_value)):
                         #print('previous is ', previous_read)
                         #print('current is ', input_value)
@@ -362,22 +361,22 @@ def generate():
             if( float(input_value) >= soft_value-10 and float(input_value) < medium_value  ):
                 print("soft squeeze")
                 initial_read = (input_value)
-                #output_serial.write(str(1).encode())
-                #output_serial.readline().decode()
+                output_serial.write(str(1).encode())
+                output_serial.readline().decode()
                 acquired_flag = True
                 releaseFlag = False
             elif( float(input_value) >= medium_value and float(input_value) <hard_value ):
                 print("medium squeeze")
                 initial_read = (input_value)
-                #output_serial.write(str(2).encode())
-                #output_serial.readline().decode()
+                output_serial.write(str(2).encode())
+                output_serial.readline().decode()
                 acquired_flag = True
                 releaseFlag = False
             elif( float(input_value) >= hard_value):
                 print("hard squeeze")
                 initial_read = float(input_value)
-                #output_serial.write(str(3).encode())
-                #output_serial.readline().decode()
+                output_serial.write(str(3).encode())
+                output_serial.readline().decode()
                 acquired_flag = True
                 releaseFlag = False
             previous_read = float(input_value)
@@ -393,6 +392,13 @@ def generate():
             break
 
 
+def sample():
+    output_serial.write(str(4).encode())
+    output_serial.readline().decode()
+    output_serial.write(str(5).encode())
+    output_serial.readline().decode()
+    output_serial.write(str(6).encode())
+    output_serial.readline().decode()
 
 def submit_demo():
     global demo_win
@@ -475,7 +481,10 @@ def survey(): # new window definition
 def submit_response():
     global Sympathetic, Fear,Loving,Anger, Disgust,Surprise,newwin, E_value, isPlaying
     global survey_response, media_time, PID_value, touchFile, surveyFlag
-    csv_writer_append([media_time,Sympathetic.get(), Fear.get(),Loving.get(),Anger.get(), Disgust.get(),Surprise.get(),E_value.get()], (str(touchFile)+ "_Responses.csv"))
+    e_value =E_value.get()
+    if e_value == "":
+        e_value = "None"
+    csv_writer_append([media_time,Sympathetic.get(), Fear.get(),Loving.get(),Anger.get(), Disgust.get(),Surprise.get(),e_value], path + str(touchFile))
     newwin.destroy()
     manual_pause()
     surveyFlag = True
@@ -487,6 +496,7 @@ hard_button  =  tk.Button(root, text = "Define Hard", command = set_hard)
 save_button  =  tk.Button(root, text = "Save Settings", command = save_settings)
 playback_button  =  tk.Button(root, text = "Replay Touches", command = generate)
 sMode_button = tk.Button(root, text = "Survey Mode", command = toSurvey)
+sample_button = tk.Button(root, text = "Sample Squeezes", command = sample)
 
 reset_button.pack(side = tk.BOTTOM)
 soft_button.pack(side = tk.BOTTOM)
@@ -495,6 +505,7 @@ hard_button.pack(side = tk.BOTTOM)
 save_button.pack(side = tk.BOTTOM)
 playback_button.pack()
 sMode_button.pack()
+sample_button.pack()
 listofsongs=[]
 realnames = []
 touchFileNames = []
@@ -630,17 +641,13 @@ def directorychooser():
        if(okay==True):
            directorychooser()
     else:
-        print("test1")
         listbox.delete(0, tk.END)
-        print("test2")
         realnames.reverse()
-        print("test3")
         pygame.mixer.music.load(listofsongs[0])
-        print("test4")
         touchFile = touchFileNames[0]
-        print("test5")
-        csv_writer(["Media Time", "Sympathetic", "Fear", "Loving", "Anger", "Disgust", "Surprise","Other"], str(touchFile)+ "_Responses.csv")
-        print("test6")
+        csv_writer_append(["Media Time", "Sympathetic", "Fear", "Loving", "Anger", "Disgust", "Surprise","Other"], path + str(touchFile))
+
+        #csv_writer(["Media Time,Sympathetic,Fear,Loving,Anger,Disgust,Surprise,Other", path + str(touchFile))
         print("touchfile is set")
         for items in realnames:
             listbox.insert(0, items)
@@ -746,7 +753,9 @@ def csv_writer_append(item, path):
     with open(path, "a", newline = '') as csv_file:
         writer = csv.writer(csv_file, delimiter = ' ')
         for value in item:
-            csv_file.write(str(value) + ',')
+            csv_file.write(str(value))
+            if value is not item[-1]:
+                csv_file.write(',')
         csv_file.write('\n')
         csv_file.close()
 
@@ -760,13 +769,21 @@ offset = 0
 data = []
 PID_value = "1"
 # touchFile = ""
-demog()
-path = "Emotional music/DataFiles/" + PID_value + "/"
+if len(sys.argv) != 2:
+    print ("Sending Mode")
+    demog()
+    path= "intention_"
+else:
+    print("Receiving Mode")
+    PID_value = PID_value = str(sys.argv[1])
+    path = "perception_"
+
+
 #myFile = open(path, 'a')
 # csv_writer_append(["Media Time", "Sympathetic", "Fear", "Loving", "Anger", "Disgust", "Surprise","Other"], path + str(touchFile)+ "_Responses.csv")
 
 while True:
-    '''
+
     # a.encode('utf-8').strip()
     value = (input_serial.readline().decode())
     try:
@@ -797,7 +814,7 @@ while True:
         #csv_writer(data,'touches.csv')
 
 
-'''
+
     #server.send(message.encode())
     root.update()
 
