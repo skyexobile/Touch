@@ -14,7 +14,9 @@ if len(sys.argv) != 2:
     print ("Correct usage: script, Participant ID")
     exit()
 
-PID = str(sys.argv[1])
+PID_value = str(sys.argv[1])
+path2 = "DataFiles/" + PID_value + "/"
+offset = 0
 pygame.mixer.init(44100, -16,2,2048)
 print("Connecting to Touch Output")
 #Niloofar's computer
@@ -133,7 +135,7 @@ def generate():
             #check this is the last release
             print('value is ', input_value)
             if(acquired_flag and (previous_read - float(input_value) >=3)):
-                #print('release')
+                print('release')
                 #output_serial.write(str(0).encode())
                 #output_serial.readline().decode()
                 if surveyMode and releaseFlag is False:
@@ -190,36 +192,36 @@ def generate():
 
 
 def survey(): # new window definition
-    global CheckVar1, CheckVar2,CheckVar3,CheckVar4,CheckVar5,CheckVar6, E1
+    global Sympathetic, Fear,Loving,Anger,Disgust,Surprise, E_value
     global newwin, surveyFlag
     surveyFlag = False
     newwin = Toplevel(root)
     display = Label(newwin, text="What did you think the intent was?")
     display.pack()
-    CheckVar1 = IntVar()
-    CheckVar2 = IntVar()
-    CheckVar3 = IntVar()
-    CheckVar4 = IntVar()
-    CheckVar5 = IntVar()
-    CheckVar6 = IntVar()
-    C1 = Checkbutton(newwin, text = "Sympathetic", variable = CheckVar1, \
+    Sympathetic = IntVar()
+    Fear = IntVar()
+    Loving = IntVar()
+    Anger = IntVar()
+    Disgust = IntVar()
+    Surprise = IntVar()
+    C1 = Checkbutton(newwin, text = "Sympathetic", variable = Sympathetic, \
                  onvalue = 1, offvalue = 0, height=2, \
                  width = 20, )
-    C2 = Checkbutton(newwin, text = "Fear", variable = CheckVar2, \
+    C2 = Checkbutton(newwin, text = "Fear", variable = Fear, \
                  onvalue = 1, offvalue = 0, height=2, \
                  width = 20)
-    C3 = Checkbutton(newwin, text = "Loving", variable = CheckVar3, \
+    C3 = Checkbutton(newwin, text = "Loving", variable = Loving, \
                  onvalue = 1, offvalue = 0, height=2, \
                  width = 20, )
-    C4 = Checkbutton(newwin, text = "Anger", variable = CheckVar4, \
+    C4 = Checkbutton(newwin, text = "Anger", variable = Anger, \
                  onvalue = 1, offvalue = 0, height=2, \
                  width = 20)
 
-    C5 = Checkbutton(newwin, text = "disgust", variable = CheckVar5, \
+    C5 = Checkbutton(newwin, text = "Disgust", variable = Disgust, \
                  onvalue = 1, offvalue = 0, height=2, \
                  width = 20)
 
-    C6 = Checkbutton(newwin, text = "Surprise", variable = CheckVar6, \
+    C6 = Checkbutton(newwin, text = "Surprise", variable = Surprise, \
                  onvalue = 1, offvalue = 0, height=2, \
                  width = 20)
 
@@ -231,23 +233,22 @@ def survey(): # new window definition
     C6.pack()
     L1 = Label(newwin, text = "Other")
     L1.pack()
-    E1 = Entry(newwin)
-    E1.pack()
+    E_value = Entry(newwin)
+    E_value.pack()
     submit_button =Button(newwin, text ="Submit", command =submit_response) #command linked
     submit_button.pack()
     while surveyFlag is False:
         root.update()
+
     #submit_button.pack()
 def submit_response():
-    global CheckVar1, CheckVar2,CheckVar3,CheckVar4, CheckVar5,CheckVar6,newwin, E1, isPlaying
-    print('value1 is ', CheckVar1.get())
-    print('value2 is ', CheckVar2.get())
-    print('other value is ', E1.get())
+    global Sympathetic, Fear,Loving,Anger, Disgust,Surprise,newwin, E_value, isPlaying
+    global survey_response, media_time, PID_value, touchFile, surveyFlag
+    csv_writer_append([media_time,Sympathetic.get(), Fear.get(),Loving.get(),Anger.get(), Disgust.get(),Surprise.get(),E_value.get()], (str(touchFile)+ "_Responses.csv"))
     newwin.destroy()
     manual_pause()
     surveyFlag = True
-
-
+    print('survey flag is ', surveyFlag)
 def csv_writer(data2, path):
     with open(path, 'a', newline='') as csv_file:
         writer = csv.writer(csv_file)
@@ -262,9 +263,9 @@ def csv_writer_append(item, path):
         csv_file.close()
 
 def load_settings():
-    global soft_value, medium_value, hard_value
+    global soft_value, medium_value, hard_value, PID_value
     settings = []
-    with open("Emotional music/DataFiles/" + PID + "/Settings.csv") as csv_file:
+    with open("Emotional music/DataFiles/" + PID_value + "/Settings.csv") as csv_file:
         reader = csv.reader(csv_file, delimiter = '\n')
         #Here is where you should be reading through the file and sending values to output serial
         for row in reader:
@@ -315,12 +316,11 @@ touchFileNames = []
 def updatelabel():
     global index
     global songname
-    global start_time
     v.set(listofsongs[index])
     #return songname
 
 def pausesong(event):
-    global ctr, isPlaying, resume_time
+    global ctr, isPlaying, resume_time, start_time
     ctr += 1
     if (ctr%2!=0):
         isPlaying = False
@@ -335,23 +335,27 @@ def pausesong(event):
 
 
 def manual_pause():
-    global ctr, isPlaying, resume_time
+    global ctr, isPlaying, resume_time, media_time, start_time
     ctr += 1
     if (ctr%2!=0):
         isPlaying = False
-        resume_time = pygame.mixer.music.get_pos()
+        if start_time == 0:
+            resume_time = pygame.mixer.music.get_pos()
+        else:
+            resume_time = pygame.mixer.music.get_pos()  + resume_time
         pygame.mixer.music.stop()
         print('player stopped')
-
-    else:
         pygame.mixer.music.load(listofsongs[index])
-        print('player loaded')
+        print('music loaded')
+        print("resume time is ", resume_time/1000)
+    else:
         isPlaying = True
+        print('player resumed')
         start_time = resume_time/1000.0
-        print('start time is ', start_time)
-        pygame.mixer.music.play(0,start_time)
-
-
+        print("start time is ", start_time)
+        media_time = start_time + media_time
+        print("music time set")
+        pygame.mixer.music.play(0, start_time)
 
 def playsong(event):
     global isPlaying
@@ -426,7 +430,7 @@ def toggle():
 def directorychooser():
  global count
  global index
- global touchFile, PID
+ global touchFile, PID_value
  global path2
     #count=0
  load_settings()
@@ -444,7 +448,7 @@ def directorychooser():
       if files.endswith('.mp3'):
           realdir = os.path.realpath(files)
           fileName = os.path.splitext(files)[0]
-          touchFileName = "DataFiles/"+PID+"/" +fileName + '.csv'
+          touchFileName = "DataFiles/"+PID_value+"/" +fileName + '.csv'
           audio = ID3(realdir)
           realnames.append(audio.get('TIT2', 'No Title'))
           listofsongs.append(files)
@@ -461,7 +465,7 @@ def directorychooser():
         realnames.reverse()
         pygame.mixer.music.load(listofsongs[0])
         touchFile = touchFileNames[0]
-        csv_writer_append(["Media Time", "Sympathetic", "Fear", "Loving", "Anger", "Disgust", "Surprise","Other"], "DataFiles/"+PID+"/" + str(touchFile)+ "_Responses.csv")
+        csv_writer_append(["Media Time", "Sympathetic", "Fear", "Loving", "Anger", "Disgust", "Surprise","Other"], path2 + str(touchFile)+ "_Responses.csv")
         print("touchfile is set")
         for items in realnames:
             listbox.insert(0, items)
@@ -569,5 +573,3 @@ B.pack(side = tk.BOTTOM)
 
 while True:
     root.update()
-    if (isPlaying and len(data)>0):
-        generate()

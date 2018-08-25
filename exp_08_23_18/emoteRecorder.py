@@ -273,6 +273,8 @@ def generate():
     global isPlaying
     global media_time
     global data_time, touchFile, surveyMode
+    start_time = 0
+    print('touch file is ', touchFile)
     with open(touchFile) as csv_file:
         reader = csv.reader(csv_file, delimiter = '\n')
         #Here is where you should be reading through the file and sending values to output serial
@@ -281,7 +283,7 @@ def generate():
     global isPlaying
     isPlaying = True
     releaseFlag = True
-    pygame.mixer.music.play(0,float(0))
+    pygame.mixer.music.play(0,0.0)
     while True:
         root.update()
         while(isPlaying and len(data) >0):
@@ -528,6 +530,7 @@ def pausesong(event):
 
 
 def playsong(event):
+    global isPlaying
     # print(touchFileNames)
     isPlaying = True
     pygame.mixer.music.play(0,0.0)
@@ -536,30 +539,31 @@ def playsong(event):
 
 def nextsong(event):
     global index, touchFile
+    print("next song")
     index += 1
     if (index < count):
         pygame.mixer.music.load(listofsongs[index])
         touchFile = touchFileNames[index]
-        isPlaying = True
-        pygame.mixer.music.play(0,0.0)
+        #isPlaying = True
+        #pygame.mixer.music.play(0,0.0)
     else:
         index = 0
         pygame.mixer.music.load(listofsongs[index])
         touchFile = touchFileNames[index]
-        isPlaying = True
-        pygame.mixer.music.play(0,0.0)
+        #isPlaying = True
+        #pygame.mixer.music.play(0,0.0)
     try:
-      updatelabel()
+        print("touch file is ", touchFile)
+        updatelabel()
     except NameError:
         print("")
 
 def previoussong(event):
-    global index
+    global index, touchFile
+    print("previous song")
     index -= 1
     pygame.mixer.music.load(listofsongs[index])
     touchFile = touchFileNames[index]
-    isPlaying = True
-    pygame.mixer.music.play(0,0.0)
     try:
         updatelabel()
     except NameError:
@@ -613,7 +617,7 @@ def directorychooser():
       if files.endswith('.mp3'):
           realdir = os.path.realpath(files)
           fileName = os.path.splitext(files)[0]
-          touchFileName = "DataFiles/"+PID_value+"/" +fileName + '.csv'
+          touchFileName = fileName + '.csv'
           audio = ID3(realdir)
           realnames.append(audio.get('TIT2', 'No Title'))
           listofsongs.append(files)
@@ -626,11 +630,17 @@ def directorychooser():
        if(okay==True):
            directorychooser()
     else:
+        print("test1")
         listbox.delete(0, tk.END)
+        print("test2")
         realnames.reverse()
+        print("test3")
         pygame.mixer.music.load(listofsongs[0])
+        print("test4")
         touchFile = touchFileNames[0]
-        csv_writer_append(["Media Time", "Sympathetic", "Fear", "Loving", "Anger", "Disgust", "Surprise","Other"], path2 + str(touchFile)+ "_Responses.csv")
+        print("test5")
+        csv_writer(["Media Time", "Sympathetic", "Fear", "Loving", "Anger", "Disgust", "Surprise","Other"], str(touchFile)+ "_Responses.csv")
+        print("test6")
         print("touchfile is set")
         for items in realnames:
             listbox.insert(0, items)
@@ -752,7 +762,6 @@ PID_value = "1"
 # touchFile = ""
 demog()
 path = "Emotional music/DataFiles/" + PID_value + "/"
-path2 = "DataFiles/" + PID_value + "/"
 #myFile = open(path, 'a')
 # csv_writer_append(["Media Time", "Sympathetic", "Fear", "Loving", "Anger", "Disgust", "Surprise","Other"], path + str(touchFile)+ "_Responses.csv")
 
