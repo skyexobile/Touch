@@ -302,8 +302,8 @@ def generate():
             # else:
             #     media_time = 0
             data_time = input_value[:input_value.find(',')]
-            print("data time is" + str(data_time))
-            print("media time is ", media_time)
+            #print("data time is" + str(data_time))
+            #print("media time is ", media_time)
             #print('data time is ', data_time)
             diff = float(data_time) - float(media_time +start_time)
             while abs(diff) > 30 and float(media_time) < float(data_time):
@@ -337,7 +337,7 @@ def generate():
             input_value = (input_value[input_value.find(',')+1:])
             #print(time.time())
             #check this is the last release
-            print('value is ', input_value)
+            #print('value is ', input_value)
             if(acquired_flag and (previous_read - float(input_value) >=3)):
                 #print('release')
                 output_serial.write(str(0).encode())
@@ -359,21 +359,21 @@ def generate():
                     releaseFlag = True
                 acquired_flag = False
             if( float(input_value) >= soft_value-10 and float(input_value) < medium_value  ):
-                print("soft squeeze")
+                #print("soft squeeze")
                 initial_read = (input_value)
                 output_serial.write(str(1).encode())
                 output_serial.readline().decode()
                 acquired_flag = True
                 releaseFlag = False
             elif( float(input_value) >= medium_value and float(input_value) <hard_value ):
-                print("medium squeeze")
+                #print("medium squeeze")
                 initial_read = (input_value)
                 output_serial.write(str(2).encode())
                 output_serial.readline().decode()
                 acquired_flag = True
                 releaseFlag = False
             elif( float(input_value) >= hard_value):
-                print("hard squeeze")
+                #print("hard squeeze")
                 initial_read = float(input_value)
                 output_serial.write(str(3).encode())
                 output_serial.readline().decode()
@@ -489,6 +489,10 @@ def submit_response():
     manual_pause()
     surveyFlag = True
     print('survey flag is ', surveyFlag)
+def release():
+    output_serial.write(str(9).encode())
+    output_serial.readline().decode()
+
 reset_button =  tk.Button(root, text = "Reset Sensor", command = reset)
 soft_button =  tk.Button(root, text = "Define Soft", command = set_soft)
 medium_button =  tk.Button(root, text = "Define Medium", command = set_medium)
@@ -497,7 +501,8 @@ save_button  =  tk.Button(root, text = "Save Settings", command = save_settings)
 playback_button  =  tk.Button(root, text = "Replay Touches", command = generate)
 sMode_button = tk.Button(root, text = "Survey Mode", command = toSurvey)
 sample_button = tk.Button(root, text = "Sample Squeezes", command = sample)
-
+release_button = tk.Button(root, text = "Release", command = release)
+release_button.pack()
 reset_button.pack(side = tk.BOTTOM)
 soft_button.pack(side = tk.BOTTOM)
 medium_button.pack(side = tk.BOTTOM)
@@ -800,12 +805,12 @@ while True:
             value = (input_serial.readline().decode())
             input_value = float(value) + offset
     if pygame.mixer.music.get_busy() and ctr%2==0 and surveyMode is False:
-        print('sending to csv!')
+        #print('sending to csv!')
         time = pygame.mixer.music.get_pos()
         message =str(time) + "," + str(input_value)
         message= message.replace("\n", "")
         data.append(message)
-        print('this is being appended ', message)
+        #print('this is being appended ', message)
         #print(touchFile)
         csv_writer(data, touchFile)
 
