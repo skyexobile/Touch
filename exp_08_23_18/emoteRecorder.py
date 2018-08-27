@@ -292,15 +292,17 @@ def generate():
     releaseFlag = True
     pygame.mixer.music.play(0,0.0)
     while True:
-        print('inside main loop')
         root.update()
-        print('is playing is ', isPlaying)
+        #print('is playing is ', isPlaying)
         while(isPlaying and len(data) >0):
             root.update()
             input_value = data[0]
             last_value = data[-1]
             #print("last value is " + last_value)
             media_time = pygame.mixer.music.get_pos()
+            if media_time == -1:
+                print('TROUBLE')
+                break
             w_sum = (float(media_time) + (float(start_time)*1000))
             media_time = w_sum
             #print("media time is" + str(media_time/1000))
@@ -315,11 +317,13 @@ def generate():
             #print('data time is ', data_time)
             diff = float(data_time) - float(media_time +start_time)
             while abs(diff) > 30 and float(media_time) < float(data_time):
-                print('in while loop')
+                previous_time = media_time
                 media_time = pygame.mixer.music.get_pos()
                 if media_time == -1:
                     print("stuck and media time is -1")
-                    pygame.mixer.music.play(0,start_time)
+                    print('previous time is ', previous_time)
+                    print('sttart_time is ', start_time)
+                    pygame.mixer.music.play(0,start_time + previous_time )
                     media_time = pygame.mixer.music.get_pos()
                 w_sum = (float(media_time) + (float(start_time)*1000))
                 media_time = w_sum
@@ -341,9 +345,8 @@ def generate():
             #print(time.time())
             #check this is the last release
             #print('value is ', input_value)
-            print('outside of while loop')
             if(acquired_flag and (previous_read - float(input_value) >=1)):
-                print('release')
+                print('release', data_time)
                 output_serial.write(str(0).encode())
                 output_serial.readline().decode()
                 if surveyMode and releaseFlag is False:
@@ -370,14 +373,14 @@ def generate():
                 acquired_flag = True
                 releaseFlag = False
             elif( float(input_value) >= medium_value and float(input_value) <hard_value ):
-                print("medium squeeze")
+                print("medium squeeze", input_value, " ", data_time)
                 initial_read = (input_value)
                 output_serial.write(str(2).encode())
                 output_serial.readline().decode()
                 acquired_flag = True
                 releaseFlag = False
             elif( float(input_value) >= hard_value):
-                print("hard squeeze")
+                print("hard squeeze", input_value, " ", data_time)
                 initial_read = float(input_value)
                 output_serial.write(str(3).encode())
                 output_serial.readline().decode()
@@ -394,7 +397,6 @@ def generate():
             output_serial.write(str(0).encode())
             output_serial.readline().decode()
             break
-        print('out of main loop')
 
 
 def sample():
@@ -795,8 +797,10 @@ if len(sys.argv) != 2:
     path= "intention_"
 else:
     print("Receiving Mode")
-    PID_value = PID_value = str(sys.argv[1])
+    PID_value = str(sys.argv[1])
     path = "perception_"
+    receive_Mode = True
+
 
 
 #myFile = open(path, 'a')
@@ -805,39 +809,42 @@ else:
 while True:
 
     # a.encode('utf-8').strip()
-    value = (input_serial.readline().decode())
-    try:
-        input_value = float(value) + offset
-    except:
+    root.update()
+    if receive_Mode == False:
+        print('in here')
         value = (input_serial.readline().decode())
-        input_value = float(value) + offset
-
-    if input_value <-3:
-        offset = offset -input_value
         try:
             input_value = float(value) + offset
         except:
             value = (input_serial.readline().decode())
             input_value = float(value) + offset
-    if pygame.mixer.music.get_busy() and ctr%2==0 and surveyMode is False:
-        #print('sending to csv!')
-        time = pygame.mixer.music.get_pos()
-        message =str(time) + "," + str(input_value)
-        message= message.replace("\n", "")
-        data.append(message)
-        #print('this is being appended ', message)
-        #print(touchFile)
-        csv_writer(data, touchFile)
 
-        #data = [time,input_value]
-        #print(data)
-        #csv_writer(data,'touches.csv')
+        if input_value <-3:
+            offset = offset -input_value
+            try:
+                input_value = float(value) + offset
+            except:
+                value = (input_serial.readline().decode())
+                input_value = float(value) + offset
+        if pygame.mixer.music.get_busy() and ctr%2==0 and surveyMode is False:
+            #print('sending to csv!')
+            time = pygame.mixer.music.get_pos()
+            message =str(time) + "," + str(input_value)
+            message= message.replace("\n", "")
+            data.append(message)
+            #print('this is being appended ', message)
+            #print(touchFile)
+            csv_writer(data, touchFile)
+
+            #data = [time,input_value]
+            #print(data)
+            #csv_writer(data,'touches.csv')
 
 
 
-    #server.send(message.encode())
-    root.update()
+        #server.send(message.encode())
+        root.update()
 
 
 
-# server.close()
+    # server.close()
