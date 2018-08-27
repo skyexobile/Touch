@@ -15,18 +15,20 @@ import tkinter.messagebox
 
 pygame.mixer.init(44100, -16,2,2048)
 #Niloofar's computer
-input_serial = serial.Serial('/dev/cu.usbmodem14431')
+#input_serial = serial.Serial('/dev/cu.usbmodem14431')
 #Angela's computer
 
-# input_serial = serial.Serial('/dev/cu.usbmodem1421')
+input_serial = serial.Serial('/dev/cu.usbmodem1421')
 
 input_serial.setBaudrate(115200)
 print("Connected to Sensor")
-# output_serial = serial.Serial('/dev/cu.usbmodem14441')
-# output_serial.setBaudrate(115200)
+#Niloofar's computer
+#output_serial = serial.Serial('/dev/cu.usbmodem14411')
+output_serial = serial.Serial('/dev/cu.usbmodem1411')
+output_serial.setBaudrate(115200)
 #
-# output_serial.setDTR(False)
-# output_serial.setRTS(False)
+output_serial.setDTR(False)
+output_serial.setRTS(False)
 #server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 #IP_address = str(sys.argv[1])
@@ -45,7 +47,7 @@ first_time = True
 
 def toSurvey():
     global surveyMode, touchFile
-    surveyMode = True
+    surveyMode = not surveyMode
     print("surveyMode is now ", surveyMode)
 def reset():
     global offset
@@ -290,8 +292,11 @@ def generate():
     releaseFlag = True
     pygame.mixer.music.play(0,0.0)
     while True:
+        print('inside main loop')
         root.update()
+        print('is playing is ', isPlaying)
         while(isPlaying and len(data) >0):
+            root.update()
             input_value = data[0]
             last_value = data[-1]
             #print("last value is " + last_value)
@@ -310,15 +315,12 @@ def generate():
             #print('data time is ', data_time)
             diff = float(data_time) - float(media_time +start_time)
             while abs(diff) > 30 and float(media_time) < float(data_time):
-                #print("diff is ", abs(diff))
+                print('in while loop')
                 media_time = pygame.mixer.music.get_pos()
                 if media_time == -1:
                     print("stuck and media time is -1")
                     pygame.mixer.music.play(0,start_time)
                     media_time = pygame.mixer.music.get_pos()
-
-
-
                 w_sum = (float(media_time) + (float(start_time)*1000))
                 media_time = w_sum
                 #print("w_media time is" + str(media_time/1000))
@@ -330,8 +332,6 @@ def generate():
                 #     print("media time is ", media_time)
                 diff = float(data_time) - float(media_time+start_time)
 
-
-
                 #     media_time = 0
                 #     print("still waiting")
                 # media_time = pygame.mixer.music.get_pos()
@@ -341,42 +341,43 @@ def generate():
             #print(time.time())
             #check this is the last release
             #print('value is ', input_value)
-            if(acquired_flag and (previous_read - float(input_value) >=3)):
-                #print('release')
+            print('outside of while loop')
+            if(acquired_flag and (previous_read - float(input_value) >=1)):
+                print('release')
                 output_serial.write(str(0).encode())
                 output_serial.readline().decode()
                 if surveyMode and releaseFlag is False:
                     manual_pause()
                     isPlaying = False
                     survey()
-                    while(float(previous_read) > float(input_value)):
-                        #print('previous is ', previous_read)
-                        #print('current is ', input_value)
-                        del data[0]
-                        previous_read = input_value
-                        input_value = data[0]
-                        input_value = (input_value[input_value.find(',')+1:])
-                        data_time = input_value[:input_value.find(',')]
+                while(float(previous_read) > float(input_value)):
+                    #print('previous is ', previous_read)
+                    #print('current is ', input_value)
+                    del data[0]
+                    previous_read = input_value
+                    input_value = data[0]
+                    input_value = (input_value[input_value.find(',')+1:])
+                    data_time = input_value[:input_value.find(',')]
 
                         #print("released data time is" + str(data_time))
                     releaseFlag = True
                 acquired_flag = False
             if( float(input_value) >= soft_value-10 and float(input_value) < medium_value  ):
-                #print("soft squeeze")
+                print("soft squeeze")
                 initial_read = (input_value)
                 output_serial.write(str(1).encode())
                 output_serial.readline().decode()
                 acquired_flag = True
                 releaseFlag = False
             elif( float(input_value) >= medium_value and float(input_value) <hard_value ):
-                #print("medium squeeze")
+                print("medium squeeze")
                 initial_read = (input_value)
                 output_serial.write(str(2).encode())
                 output_serial.readline().decode()
                 acquired_flag = True
                 releaseFlag = False
             elif( float(input_value) >= hard_value):
-                #print("hard squeeze")
+                print("hard squeeze")
                 initial_read = float(input_value)
                 output_serial.write(str(3).encode())
                 output_serial.readline().decode()
@@ -386,13 +387,14 @@ def generate():
             del data[0]
         # else:
         #print("reached EOF")
-        if isPlaying == False:
-            break
             #print("isplaying is false")
-        elif len(data)<=0:
+        if len(data)<=0:
             print('end of song')
             pygame.mixer.music.stop()
+            output_serial.write(str(0).encode())
+            output_serial.readline().decode()
             break
+        print('out of main loop')
 
 
 def sample():
@@ -538,7 +540,7 @@ def updatelabel():
     #return songname
 
 def pausesong(event):
-    global ctr
+    global ctr, isPlaying
     ctr += 1
     if (ctr%2!=0):
         isPlaying = False
@@ -590,8 +592,11 @@ def previoussong(event):
 
 
 def stopsong(event):
+    global isPlaying
     isPlaying = False
     pygame.mixer.music.stop()
+    output_serial.write(str(0).encode())
+    output_serial.readline().decode
     # pygame.mixer.quit()
     #v.set("")
     #return songname
