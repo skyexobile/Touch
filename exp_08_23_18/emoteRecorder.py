@@ -17,7 +17,7 @@ pygame.mixer.init(44100, -16,2,2048)
 #Niloofar's computer
 #input_serial = serial.Serial('/dev/cu.usbmodem14431')
 #Angela's computer
-
+'''
 input_serial = serial.Serial('/dev/cu.usbmodem1421')
 
 input_serial.setBaudrate(115200)
@@ -30,7 +30,7 @@ output_serial.setBaudrate(115200)
 output_serial.setDTR(False)
 output_serial.setRTS(False)
 #server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
+'''
 #IP_address = str(sys.argv[1])
 #Port = int(sys.argv[2])server.connect(("localhost", 5000))
 start_time = 0
@@ -290,6 +290,7 @@ def generate():
     global isPlaying
     isPlaying = True
     releaseFlag = True
+    media_list = []
     pygame.mixer.music.play(0,0.0)
     while True:
         root.update()
@@ -301,8 +302,17 @@ def generate():
             #print("last value is " + last_value)
             media_time = pygame.mixer.music.get_pos()
             if media_time == -1:
-                print('TROUBLE')
-                break
+                print('first -1')
+                if len(media_list) == 0:
+                    pygame.mixer.music.play(0, 0)
+                    media_time = pygame.mixer.music.get_pos()
+                else:
+                    #this should be the end of the song
+                    print('was this the end of the song?')
+                    pygame.mixer.music.stop()
+
+            media_list.append(media_time)
+            print('appended ', media_time)
             w_sum = (float(media_time) + (float(start_time)*1000))
             media_time = w_sum
             #print("media time is" + str(media_time/1000))
@@ -320,10 +330,9 @@ def generate():
                 previous_time = media_time
                 media_time = pygame.mixer.music.get_pos()
                 if media_time == -1:
-                    print("stuck and media time is -1")
-                    print('previous time is ', previous_time)
-                    print('sttart_time is ', start_time)
-                    pygame.mixer.music.play(0,start_time + previous_time )
+                    print('2nd -1')
+                    resume = media_list[-1]
+                    pygame.mixer.music.play(0,resume)
                     media_time = pygame.mixer.music.get_pos()
                 w_sum = (float(media_time) + (float(start_time)*1000))
                 media_time = w_sum
@@ -346,9 +355,9 @@ def generate():
             #check this is the last release
             #print('value is ', input_value)
             if(acquired_flag and (previous_read - float(input_value) >=1)):
-                print('release', data_time)
-                output_serial.write(str(0).encode())
-                output_serial.readline().decode()
+                #print('release', data_time)
+                #output_serial.write(str(0).encode())
+                #output_serial.readline().decode()
                 if surveyMode and releaseFlag is False:
                     manual_pause()
                     isPlaying = False
@@ -366,24 +375,24 @@ def generate():
                     releaseFlag = True
                 acquired_flag = False
             if( float(input_value) >= soft_value-10 and float(input_value) < medium_value  ):
-                print("soft squeeze")
+                #print("soft squeeze")
                 initial_read = (input_value)
-                output_serial.write(str(1).encode())
-                output_serial.readline().decode()
+                #output_serial.write(str(1).encode())
+                #output_serial.readline().decode()
                 acquired_flag = True
                 releaseFlag = False
             elif( float(input_value) >= medium_value and float(input_value) <hard_value ):
-                print("medium squeeze", input_value, " ", data_time)
+                #print("medium squeeze", input_value, " ", data_time)
                 initial_read = (input_value)
-                output_serial.write(str(2).encode())
-                output_serial.readline().decode()
+                #output_serial.write(str(2).encode())
+                #output_serial.readline().decode()
                 acquired_flag = True
                 releaseFlag = False
             elif( float(input_value) >= hard_value):
-                print("hard squeeze", input_value, " ", data_time)
+                print("hard squeeze", input_value, " ", media_time)
                 initial_read = float(input_value)
-                output_serial.write(str(3).encode())
-                output_serial.readline().decode()
+                #output_serial.write(str(3).encode())
+                #output_serial.readline().decode()
                 acquired_flag = True
                 releaseFlag = False
             previous_read = float(input_value)
@@ -394,8 +403,8 @@ def generate():
         if len(data)<=0:
             print('end of song')
             pygame.mixer.music.stop()
-            output_serial.write(str(0).encode())
-            output_serial.readline().decode()
+            #output_serial.write(str(0).encode())
+            #output_serial.readline().decode()
             break
 
 
@@ -597,8 +606,8 @@ def stopsong(event):
     global isPlaying
     isPlaying = False
     pygame.mixer.music.stop()
-    output_serial.write(str(0).encode())
-    output_serial.readline().decode
+    #output_serial.write(str(0).encode())
+    #output_serial.readline().decode
     # pygame.mixer.quit()
     #v.set("")
     #return songname
