@@ -7,24 +7,26 @@ from tkinter import*
 import csv
 from tkinter.filedialog import askdirectory
 import pygame
-from mutagen.id3 import ID3
+from mutagen.id3 import ID3,ID3NoHeaderError
+from mutagen.easyid3 import EasyID3
+import mutagen
 import tkinter.messagebox
 
 
 pygame.mixer.init(44100, -16,2,2048)
 #Niloofar's computer
-#input_serial = serial.Serial('/dev/cu.usbmodem14431')
+input_serial = serial.Serial('/dev/cu.usbmodem14431')
 #Angela's computer
 
-input_serial = serial.Serial('/dev/cu.usbmodem1421')
+# input_serial = serial.Serial('/dev/cu.usbmodem1421')
 
 input_serial.setBaudrate(115200)
 print("Connected to Sensor")
-output_serial = serial.Serial('/dev/cu.usbmodem1411')
-output_serial.setBaudrate(115200)
-
-output_serial.setDTR(False)
-output_serial.setRTS(False)
+# output_serial = serial.Serial('/dev/cu.usbmodem14441')
+# output_serial.setBaudrate(115200)
+#
+# output_serial.setDTR(False)
+# output_serial.setRTS(False)
 #server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 #IP_address = str(sys.argv[1])
@@ -39,6 +41,7 @@ acquired_flag = False
 surveyMode = False
 survey_response = []
 receive_Mode = False
+first_time = True
 
 def toSurvey():
     global surveyMode, touchFile
@@ -617,8 +620,12 @@ def directorychooser():
  global index
  global touchFile, PID_value
  global path2
+ global first_time
     #count=0
- load_settings()
+ if first_time:
+    first_time = False
+    load_settings()
+ # load_settings()
  directory = askdirectory()
  print(directory)
  if(directory):
@@ -634,7 +641,11 @@ def directorychooser():
           realdir = os.path.realpath(files)
           fileName = os.path.splitext(files)[0]
           touchFileName = fileName + '.csv'
-          audio = ID3(realdir)
+          try:
+              audio = EasyID3(realdir)
+          except mutagen.id3.ID3NoHeaderError:
+              audio = mutagen.File(realdir, easy=True)
+              audio.add_tags()
           realnames.append(audio.get('TIT2', 'No Title'))
           listofsongs.append(files)
           touchFileNames.append(touchFileName)
@@ -680,13 +691,12 @@ def directorychooser():
 
 
 def call(event):
- if(True):
     try:
         pygame.mixer.music.stop()
         k=directorychooser()
-
     except OSError as e:
-         print("thank you")
+        print(e.errno)
+        print("thank you")
 
 realnames.reverse()
 
