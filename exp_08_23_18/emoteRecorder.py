@@ -17,7 +17,7 @@ pygame.mixer.init(44100, -16,2,2048)
 #Niloofar's computer
 #input_serial = serial.Serial('/dev/cu.usbmodem14431')
 #Angela's computer
-'''
+
 input_serial = serial.Serial('/dev/cu.usbmodem1421')
 
 input_serial.setBaudrate(115200)
@@ -30,7 +30,7 @@ output_serial.setBaudrate(115200)
 output_serial.setDTR(False)
 output_serial.setRTS(False)
 #server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-'''
+
 #IP_address = str(sys.argv[1])
 #Port = int(sys.argv[2])server.connect(("localhost", 5000))
 start_time = 0
@@ -310,6 +310,8 @@ def generate():
                     #this should be the end of the song
                     print('was this the end of the song?')
                     pygame.mixer.music.stop()
+                    isPlaying = False
+                    break
 
             media_list.append(media_time)
             print('appended ', media_time)
@@ -356,8 +358,8 @@ def generate():
             #print('value is ', input_value)
             if(acquired_flag and (previous_read - float(input_value) >=1)):
                 #print('release', data_time)
-                #output_serial.write(str(0).encode())
-                #output_serial.readline().decode()
+                output_serial.write(str(0).encode())
+                output_serial.readline().decode()
                 if surveyMode and releaseFlag is False:
                     manual_pause()
                     isPlaying = False
@@ -377,22 +379,22 @@ def generate():
             if( float(input_value) >= soft_value-10 and float(input_value) < medium_value  ):
                 #print("soft squeeze")
                 initial_read = (input_value)
-                #output_serial.write(str(1).encode())
-                #output_serial.readline().decode()
+                output_serial.write(str(1).encode())
+                output_serial.readline().decode()
                 acquired_flag = True
                 releaseFlag = False
             elif( float(input_value) >= medium_value and float(input_value) <hard_value ):
                 #print("medium squeeze", input_value, " ", data_time)
                 initial_read = (input_value)
-                #output_serial.write(str(2).encode())
-                #output_serial.readline().decode()
+                output_serial.write(str(2).encode())
+                output_serial.readline().decode()
                 acquired_flag = True
                 releaseFlag = False
             elif( float(input_value) >= hard_value):
                 print("hard squeeze", input_value, " ", media_time)
                 initial_read = float(input_value)
-                #output_serial.write(str(3).encode())
-                #output_serial.readline().decode()
+                output_serial.write(str(3).encode())
+                output_serial.readline().decode()
                 acquired_flag = True
                 releaseFlag = False
             previous_read = float(input_value)
@@ -401,10 +403,10 @@ def generate():
         #print("reached EOF")
             #print("isplaying is false")
         if len(data)<=0:
-            print('end of song')
+            print('end of touches')
             pygame.mixer.music.stop()
-            #output_serial.write(str(0).encode())
-            #output_serial.readline().decode()
+            output_serial.write(str(0).encode())
+            output_serial.readline().decode()
             break
 
 
@@ -606,8 +608,8 @@ def stopsong(event):
     global isPlaying
     isPlaying = False
     pygame.mixer.music.stop()
-    #output_serial.write(str(0).encode())
-    #output_serial.readline().decode
+    output_serial.write(str(0).encode())
+    output_serial.readline().decode
     # pygame.mixer.quit()
     #v.set("")
     #return songname
@@ -819,15 +821,15 @@ while True:
 
     # a.encode('utf-8').strip()
     root.update()
+
     if receive_Mode == False:
-        print('in here')
         value = (input_serial.readline().decode())
         try:
             input_value = float(value) + offset
         except:
             value = (input_serial.readline().decode())
             input_value = float(value) + offset
-
+        print(input_value)
         if input_value <-3:
             offset = offset -input_value
             try:
