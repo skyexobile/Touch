@@ -18,15 +18,16 @@ py_audio = pyaudio.PyAudio()
 paused = False
 difference = 0.0
 root = tk.Tk()
-
+isPlaying = False
 #Niloofar's computer
 #input_serial = serial.Serial('/dev/cu.usbmodem14431')
 #Angela's computer
-'''
+
 input_serial = serial.Serial('/dev/cu.usbmodem1421')
 
 input_serial.setBaudrate(115200)
 print("Connected to Sensor")
+'''
 #Niloofar's computer
 #output_serial = serial.Serial('/dev/cu.usbmodem14411')
 output_serial = serial.Serial('/dev/cu.usbmodem1411')
@@ -256,7 +257,7 @@ def generate():
     global acquired_flag, soft_value, medium_value, hard_value, start_time
     global previous_read
     global isPlaying
-    global media_time
+    global stream_time
     global data_time, touchFile, surveyMode
     start_time = 0
     print('touch file is ', touchFile)
@@ -270,6 +271,7 @@ def generate():
     releaseFlag = True
     media_list = []
     play()
+    initial_time = stream.get_time()
     while True:
         root.update()
         #print('is playing is ', isPlaying)
@@ -278,39 +280,41 @@ def generate():
             input_value = data[0]
             last_value = data[-1]
 
-            #print("media time is" + str(media_time/1000))
+            #print("media time is" + str(stream_time/1000))
             #print("start time is" + str(start_time))
             # if pygame.mixer.music.get_busy():
-            #     media_time = pygame.mixer.music.get_pos()
+            #     stream_time = pygame.mixer.music.get_pos()
             # else:
-            #     media_time = 0
+            #     stream_time = 0
             data_time = input_value[:input_value.find(',')]
             #print("data time is" + str(data_time))
-            #print("media time is ", media_time)
+            #print("media time is ", stream_time)
             #print('data time is ', data_time)
-            stream_time = stream.get_time() - difference
+            stream_time = (stream.get_time() - difference) - initial_time
             diff = float(data_time) - float(stream_time)
-            while abs(diff) > 30 and float(stream_time) < float(data_time):
-                stream_time = stream.get_time() - difference
-                #print("w_media time is" + str(media_time/1000))
+            #print('data time is ', data_time)
+            #print('stream time is', stream_time)
+            while abs(diff) >= 0.2 and float(stream_time) < float(data_time):
+                stream_time = (stream.get_time() - difference)- initial_time
+                #print("w_media time is" + str(stream_time/1000))
                 #print("w_start time is" + str(start_time))
-                #print("waiting and media time is " + str(media_time/1000))
+                #print("waiting and media time is " + str(stream_time/1000))
                 # if pygame.mixer.music.get_busy():
                 #     print("waiting in loop")
-                #     media_time = pygame.mixer.music.get_pos()
-                #     print("media time is ", media_time)
+                #     stream_time = pygame.mixer.music.get_pos()
+                #     print("media time is ", stream_time)
                 diff = float(data_time) - float(stream_time)
 
-                #     media_time = 0
+                #     stream_time = 0
                 #     print("still waiting")
-                # media_time = pygame.mixer.music.get_pos()
+                # stream_time = pygame.mixer.music.get_pos()
 
 
             input_value = (input_value[input_value.find(',')+1:])
             #print(time.time())
             #check this is the last release
             #print('value is ', input_value)
-            if(acquired_flag and (previous_read - float(input_value) >=1)):
+            if(acquired_flag and (float(previous_read) - float(input_value) >=1)):
                 print('release', data_time)
                 #output_serial.write(str(0).encode())
                 #output_serial.readline().decode()
@@ -345,7 +349,7 @@ def generate():
                 acquired_flag = True
                 releaseFlag = False
             elif( float(input_value) >= hard_value):
-                print("hard squeeze", input_value, " ", media_time)
+                print("hard squeeze", input_value, " ", stream_time)
                 initial_read = float(input_value)
                 #output_serial.write(str(3).encode())
                 #output_serial.readline().decode()
@@ -451,13 +455,13 @@ def survey(): # new window definition
     #submit_button.pack()
 def submit_response():
     global Sympathetic, Fear,Loving,Anger, Disgust,Surprise,newwin, E_value, isPlaying
-    global survey_response, media_time, PID_value, touchFile, surveyFlag
+    global survey_response, stream_time, PID_value, touchFile, surveyFlag
     e_value =E_value.get()
     if e_value == "":
         e_value = "None"
-    csv_writer_append([media_time,Sympathetic.get(), Fear.get(),Loving.get(),Anger.get(), Disgust.get(),Surprise.get(),e_value], path + str(touchFile))
+    csv_writer_append([stream_time,Sympathetic.get(), Fear.get(),Loving.get(),Anger.get(), Disgust.get(),Surprise.get(),e_value], path + str(touchFile))
     newwin.destroy()
-    manual_pause()
+    pause()
     surveyFlag = True
     print('survey flag is ', surveyFlag)
 def release():
@@ -498,7 +502,7 @@ isPlaying = False
 aquired_flag = False
 previous_read = -5000
 message = "0"
-
+initial_time = 0.0
 def updatelabel():
     global index
     global songname
@@ -508,7 +512,9 @@ def updatelabel():
 
 
 def playsong(event):
+    global initial_time, stream
     play()
+    initial_time = stream.get_time()
 
 def nextsong(event):
     global index, touchFile
@@ -542,6 +548,9 @@ def previoussong(event):
     except NameError:
         print("")
 
+def pausesong(event):
+    global ctr, isPlaying
+    pause()
 
 def stopsong(event):
     global isPlaying
@@ -772,6 +781,7 @@ def stop():
     stream.stop_stream()
     isPlaying = False
     print('stopped')
+    #stream.close()
 
 def pause():
     global difference, paused, isPlaying
@@ -786,7 +796,7 @@ def pause():
     stream.stop_stream()
     isPlaying = False
 
-stop_music = tk.Button(root, text = "stop", command = stop_)
+stop_music = tk.Button(root, text = "stop", command = stop)
 stop_music.place(relx=.5, rely=1.5, anchor="center")
 stop_music.pack()
 pause_music = tk.Button(root, text = "pause", command = pause)
@@ -796,31 +806,41 @@ while True:
 
     # a.encode('utf-8').strip()
     root.update()
-
-    if receive_Mode == False:
+    value = (input_serial.readline().decode())
+    try:
+        input_value = float(value) + offset
+    except:
         value = (input_serial.readline().decode())
-        try:
-            input_value = float(value) + offset
-        except:
-            value = (input_serial.readline().decode())
-            input_value = float(value) + offset
-        print(input_value)
-        if input_value <-3:
-            offset = offset -input_value
-            try:
-                input_value = float(value) + offset
-            except:
-                value = (input_serial.readline().decode())
-                input_value = float(value) + offset
-        if stream.is_active() and surveyMode is False:
+        input_value = float(value) + offset
+    print(input_value)
+    if isPlaying and surveyMode is False:
             #print('sending to csv!')
-            time = stream.get_time() - difference
-            message =str(time) + "," + str(input_value)
-            message= message.replace("\n", "")
-            data.append(message)
-            #print('this is being appended ', message)
-            #print(touchFile)
-            csv_writer(data, touchFile)
+            while stream.is_active():
+                if receive_Mode == False:
+                    value = (input_serial.readline().decode())
+                    try:
+                        input_value = float(value) + offset
+                    except:
+                        value = (input_serial.readline().decode())
+                        input_value = float(value) + offset
+                    print(input_value)
+                    if input_value <-3:
+                        offset = offset -input_value
+                        try:
+                            input_value = float(value) + offset
+                        except:
+                            value = (input_serial.readline().decode())
+                            input_value = float(value) + offset
+
+                    time = (stream.get_time() - difference) - initial_time
+                    message =str(time) + "," + str(input_value)
+                    message= message.replace("\n", "")
+                    data.append(message)
+                    print('this is being appended ', message)
+                    print(touchFile)
+                    csv_writer(data, touchFile)
+                    root.update()
+            stream.stop_stream()
 
             #data = [time,input_value]
             #print(data)
@@ -829,7 +849,7 @@ while True:
 
 
         #server.send(message.encode())
-        root.update()
+
 
 
 
