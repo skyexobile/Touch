@@ -24,7 +24,7 @@ replay = False
 #Niloofar's computer
 #input_serial = serial.Serial('/dev/cu.usbmodem14431')
 #Angela's computer
-'''
+
 input_serial = serial.Serial('/dev/cu.usbmodem1421')
 
 input_serial.setBaudrate(115200)
@@ -38,7 +38,7 @@ output_serial.setBaudrate(115200)
 output_serial.setDTR(False)
 output_serial.setRTS(False)
 #server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-'''
+
 #IP_address = str(sys.argv[1])
 #Port = int(sys.argv[2])server.connect(("localhost", 5000))
 start_time = 0
@@ -283,6 +283,10 @@ def generate():
         while(isPlaying and len(data) >0):
             root.update()
             if isPlaying:
+                if len(data) == 0:
+                    print('no more data 1')
+                    stop()
+                    break
                 input_value = data[0]
                 last_value = data[-1]
 
@@ -324,8 +328,8 @@ def generate():
                 #print('value is ', input_value)
                 if(acquired_flag and (float(previous_read) - float(input_value) >=1)):
                     print('release', data_time)
-                    #output_serial.write(str(0).encode())
-                    #output_serial.readline().decode()
+                    output_serial.write(str(0).encode())
+                    output_serial.readline().decode()
                     if surveyMode and releaseFlag is False:
                         pause()
                         #isPlaying = False
@@ -340,6 +344,10 @@ def generate():
                             break
 
                         del data[0]
+                        if len(data)==0:
+                            print('not more data 2')
+                            stop()
+                            break
                         previous_read = input_value
                         input_value = data[0]
                         input_value = (input_value[input_value.find(',')+1:])
@@ -356,22 +364,22 @@ def generate():
                 if( float(input_value) >= soft_value-10 and float(input_value) < medium_value  ):
                     print("soft squeeze")
                     initial_read = (input_value)
-                    #output_serial.write(str(1).encode())
-                    #output_serial.readline().decode()
+                    output_serial.write(str(1).encode())
+                    output_serial.readline().decode()
                     acquired_flag = True
                     releaseFlag = False
                 elif( float(input_value) >= medium_value and float(input_value) <hard_value ):
                     print("medium squeeze", input_value, " ", data_time)
                     initial_read = (input_value)
-                    #output_serial.write(str(2).encode())
-                    #output_serial.readline().decode()
+                    output_serial.write(str(2).encode())
+                    output_serial.readline().decode()
                     acquired_flag = True
                     releaseFlag = False
                 elif( float(input_value) >= hard_value):
                     print("hard squeeze", input_value, " ", stream_time)
                     initial_read = float(input_value)
-                    #output_serial.write(str(3).encode())
-                    #output_serial.readline().decode()
+                    output_serial.write(str(3).encode())
+                    output_serial.readline().decode()
                     acquired_flag = True
                     releaseFlag = False
                 previous_read = float(input_value)
@@ -382,8 +390,8 @@ def generate():
         if len(data)<=0:
             print('end of touches')
             stop()
-            #output_serial.write(str(0).encode())
-            #output_serial.readline().decode()
+            output_serial.write(str(0).encode())
+            output_serial.readline().decode()
             break
 
 def sample():
@@ -395,15 +403,15 @@ def sample():
     output_serial.readline().decode()
 
 def submit_demo():
-    global demo_win
+    global demo_win, gender, role
     global survey_response
     global UIN, Age, PID, PID_value
-    print('saved ', [UIN.get(), Age.get(), PID.get()])
-    csv_writer_append([UIN.get(), Age.get(), PID.get()], "DemoResponses.csv")
+    print('saved ', [UIN.get(), gender.get(), Age.get(), role.get(), PID.get()])
+    csv_writer_append([UIN.get(),gender.get(), Age.get(), role.get(), PID.get()], "DemoResponses.csv")
     PID_value = PID.get()
     demo_win.destroy()
 def demog():
-    global UIN, Age, PID, demo_win
+    global UIN, Age, PID, demo_win, gender, role
     demo_win = Toplevel(root)
     display = Label(demo_win, text="Please answer the following.")
     display.pack()
@@ -411,6 +419,17 @@ def demog():
     L1.pack()
     UIN = Entry(demo_win)
     UIN.pack()
+
+    L4 = Label(demo_win, text = "Gender")
+    L4.pack()
+    gender = Entry(demo_win)
+    gender.pack()
+    L5 = Label(demo_win, text = "role")
+    L5.pack()
+    role = Entry(demo_win)
+    role.pack()
+
+
     L2 = Label(demo_win, text = "Age")
     L2.pack()
     Age = Entry(demo_win)
@@ -485,7 +504,7 @@ def submit_response():
     print('survey flag is ', surveyFlag)
 
 def release():
-    output_serial.write(str(9).encode())
+    output_serial.write(str(0).encode())
     output_serial.readline().decode()
 
 reset_button =  tk.Button(root, text = "Reset Sensor", command = reset)
@@ -844,22 +863,20 @@ while True:
 
     # a.encode('utf-8').strip()
     root.update()
-    '''value = (input_serial.readline().decode())
+    value = (input_serial.readline().decode())
     try:
         input_value = float(value) + offset
     except:
         value = (input_serial.readline().decode())
         input_value = float(value) + offset
     print(input_value)
-    '''
+
     if receive_Mode == False:
         while isPlaying and replay is False:
-            print('in this while')
             if stream.is_active():
 
-                print('in if statement')
 
-                '''value = (input_serial.readline().decode())
+                value = (input_serial.readline().decode())
                 try:
                     input_value = float(value) + offset
                 except:
@@ -873,8 +890,8 @@ while True:
                     except:
                         value = (input_serial.readline().decode())
                         input_value = float(value) + offset
-                '''
-                input_value = 500
+
+
                 stream_time = (stream.get_time() - difference) - initial_time
                 message =str(stream_time) + "," + str(input_value)
                 message= message.replace("\n", "")
@@ -884,7 +901,9 @@ while True:
                 csv_writer(rec_data, touchFile)
                 root.update()
             else:
+
                 stop()
+                break
 
 
             #data = [time,input_value]
