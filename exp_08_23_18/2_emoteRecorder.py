@@ -19,6 +19,7 @@ paused = False
 difference = 0.0
 root = tk.Tk()
 isPlaying = False
+path=""
 #Niloofar's computer
 #input_serial = serial.Serial('/dev/cu.usbmodem14431')
 #Angela's computer
@@ -47,7 +48,7 @@ data = []
 acquired_flag = False
 surveyMode = False
 survey_response = []
-receive_Mode = False
+receive_Mode = True
 first_time = True
 
 def toSurvey():
@@ -258,7 +259,7 @@ def generate():
     global previous_read
     global isPlaying
     global stream_time
-    global data_time, touchFile, surveyMode
+    global data_time, touchFile, surveyMode, difference
     start_time = 0
     data = []
     print('touch file is ', touchFile)
@@ -276,30 +277,38 @@ def generate():
     initial_time = stream.get_time()
     while True:
         root.update()
-        #print('is playing is ', isPlaying)
+        print('is playing is ', isPlaying)
         while(isPlaying and len(data) >0):
             root.update()
-            if isPlaying and stream.is_active():
+            print('test1')
+
+            if isPlaying:
+                print('test2')
 
                 input_value = data[0]
                 last_value = data[-1]
 
-                #print("media time is" + str(stream_time/1000))
-                #print("start time is" + str(start_time))
-                # if pygame.mixer.music.get_busy():
-                #     stream_time = pygame.mixer.music.get_pos()
-                # else:
-                #     stream_time = 0
+            #print("media time is" + str(stream_time/1000))
+            #print("start time is" + str(start_time))
+            # if pygame.mixer.music.get_busy():
+            #     stream_time = pygame.mixer.music.get_pos()
+            # else:
+            #     stream_time = 0
+
                 data_time = input_value[:input_value.find(',')]
-                #print("data time is" + str(data_time))
-                #print("media time is ", stream_time)
-                #print('data time is ', data_time)
+                print('data time is ', data_time)
+            #print("data time is" + str(data_time))
+            #print("media time is ", stream_time)
+            #print('data time is ', data_time)
+                print('hi')
                 stream_time = (stream.get_time() - difference) - initial_time
                 diff = float(data_time) - float(stream_time)
                 #print('data time is ', data_time)
                 #print('stream time is', stream_time)
                 while abs(diff) >= 0.2 and float(stream_time) < float(data_time):
+                    print('test3')
                     stream_time = (stream.get_time() - difference)- initial_time
+                    print(stream_time)
                     #print("w_media time is" + str(stream_time/1000))
                     #print("w_start time is" + str(start_time))
                     #print("waiting and media time is " + str(stream_time/1000))
@@ -326,15 +335,25 @@ def generate():
                         pause()
                         #isPlaying = False
                         survey()
-                    while(float(previous_read) > float(input_value)):
+                        stream_time = (stream.get_time() - initial_time) - difference
+                    while(float(previous_read) > float(input_value) and len(data)>0):
                         #print('previous is ', previous_read)
                         #print('current is ', input_value)
+                        if len(data)<=0:
+                            print('end of touches')
+                            stop()
+                            break
+
                         del data[0]
                         previous_read = input_value
                         input_value = data[0]
                         input_value = (input_value[input_value.find(',')+1:])
                         data_time = input_value[:input_value.find(',')]
                         print('wait')
+                    if len(data)<=0:
+                        print('end of touches')
+                        stop()
+                        break
 
                             #print("released data time is" + str(data_time))
                         releaseFlag = True
@@ -362,15 +381,15 @@ def generate():
                     releaseFlag = False
                 previous_read = float(input_value)
                 del data[0]
-        # else:
-        #print("reached EOF")
-            #print("isplaying is false")
+    # else:
+    #print("reached EOF")
+        #print("isplaying is false")
         if len(data)<=0:
             print('end of touches')
             stop()
             #output_serial.write(str(0).encode())
             #output_serial.readline().decode()
-        break
+            break
 
 def sample():
     output_serial.write(str(4).encode())
@@ -409,8 +428,8 @@ def demog():
     submit_button.pack()
 
 def survey(): # new window definition
-    global Sympathetic, Fear,Loving,Anger,Disgust,Surprise, E_value
-    global newwin, surveyFlag
+    global Sympathetic, Fear,Loving,Anger,Disgust,Surprise, E_value, difference
+    global newwin, surveyFlag, stream_time
     surveyFlag = False
     newwin = Toplevel(root)
     display = Label(newwin, text="What did you think the intent was?")
@@ -456,7 +475,7 @@ def survey(): # new window definition
     submit_button.pack()
     while surveyFlag is False:
         root.update()
-
+    pause()
     #submit_button.pack()
 def submit_response():
     global Sympathetic, Fear,Loving,Anger, Disgust,Surprise,newwin, E_value, isPlaying
@@ -466,7 +485,7 @@ def submit_response():
         e_value = "None"
     csv_writer_append([stream_time,Sympathetic.get(), Fear.get(),Loving.get(),Anger.get(), Disgust.get(),Surprise.get(),e_value], path + str(touchFile))
     newwin.destroy()
-    pause()
+
     surveyFlag = True
     print('survey flag is ', surveyFlag)
 
@@ -632,7 +651,6 @@ def directorychooser():
         realnames.reverse()
         #pygame.mixer.music.load(listofsongs[0])
         touchFile = touchFileNames[0]
-        csv_writer_append(["Media Time", "Sympathetic", "Fear", "Loving", "Anger", "Disgust", "Surprise","Other"], path + str(touchFile))
 
         #csv_writer(["Media Time,Sympathetic,Fear,Loving,Anger,Disgust,Surprise,Other", path + str(touchFile))
         print("touchfile is set")
@@ -755,16 +773,6 @@ offset = 0
 data = []
 PID_value = "1"
 # touchFile = ""
-if len(sys.argv) != 2:
-    print ("Sending Mode")
-    demog()
-    path= "intention_"
-else:
-    print("Receiving Mode")
-    PID_value = str(sys.argv[1])
-    path = "perception_"
-    receive_Mode = True
-
 
 
 #myFile = open(path, 'a')
@@ -794,9 +802,12 @@ def pause():
     global difference, paused, isPlaying, stream_time, initial_time
     if paused:
         p_time = stream.get_time() - initial_time
+        print('initial time is ', initial_time)
         difference = p_time - stream_time
+        print('diference is ', difference)
         stream.start_stream()
-        print('resume')
+        stream_time = stream.get_time() - initial_time - difference
+        print('resume', stream_time )
         paused = False
         isPlaying = True
         return
@@ -804,13 +815,34 @@ def pause():
     stream.stop_stream()
     isPlaying = False
 
-stop_music = tk.Button(root, text = "stop", command = stop)
-stop_music.place(relx=.5, rely=1.5, anchor="center")
-stop_music.pack()
-pause_music = tk.Button(root, text = "pause", command = pause)
-pause_music.place(relx=.5, rely=1.5, anchor="center")
-pause_music.pack()
+def send_mode():
+    global receive_Mode, path, touchFile
+    receive_Mode = False
+    print('sending mode')
+
+    path= "intention_"
+    csv_writer_append(["Media Time", "Sympathetic", "Fear", "Loving", "Anger", "Disgust", "Surprise","Other"], path + str(touchFile))
+
+
+
+def recv_mode():
+    global receive_Mode, path, touchFile
+    receive_Mode = True
+    print('receiving mode')
+    path = "perception_"
+    csv_writer_append(["Media Time", "Sympathetic", "Fear", "Loving", "Anger", "Disgust", "Surprise","Other"], path + str(touchFile))
+
+
+sending = tk.Button(root, text = "send mode", command = stop)
+sending.place(relx=.5, rely=1.5, anchor="center")
+sending.pack()
+recv = tk.Button(root, text = "receive mode", command = recv_mode)
+recv.place(relx=.5, rely=1.5, anchor="center")
+recv.pack()
 rec_data = []
+
+demog()
+
 while True:
 
     # a.encode('utf-8').strip()
