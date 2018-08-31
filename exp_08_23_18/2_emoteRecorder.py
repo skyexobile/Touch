@@ -260,6 +260,7 @@ def generate():
     global stream_time
     global data_time, touchFile, surveyMode
     start_time = 0
+    data = []
     print('touch file is ', touchFile)
     with open(touchFile) as csv_file:
         reader = csv.reader(csv_file, delimiter = '\n')
@@ -278,87 +279,89 @@ def generate():
         #print('is playing is ', isPlaying)
         while(isPlaying and len(data) >0):
             root.update()
-            input_value = data[0]
-            last_value = data[-1]
+            if isPlaying and stream.is_active():
 
-            #print("media time is" + str(stream_time/1000))
-            #print("start time is" + str(start_time))
-            # if pygame.mixer.music.get_busy():
-            #     stream_time = pygame.mixer.music.get_pos()
-            # else:
-            #     stream_time = 0
-            data_time = input_value[:input_value.find(',')]
-            #print("data time is" + str(data_time))
-            #print("media time is ", stream_time)
-            #print('data time is ', data_time)
-            stream_time = (stream.get_time() - difference) - initial_time
-            diff = float(data_time) - float(stream_time)
-            #print('data time is ', data_time)
-            #print('stream time is', stream_time)
-            while abs(diff) >= 0.2 and float(stream_time) < float(data_time):
-                stream_time = (stream.get_time() - difference)- initial_time
-                #print("w_media time is" + str(stream_time/1000))
-                #print("w_start time is" + str(start_time))
-                #print("waiting and media time is " + str(stream_time/1000))
+                input_value = data[0]
+                last_value = data[-1]
+
+                #print("media time is" + str(stream_time/1000))
+                #print("start time is" + str(start_time))
                 # if pygame.mixer.music.get_busy():
-                #     print("waiting in loop")
                 #     stream_time = pygame.mixer.music.get_pos()
-                #     print("media time is ", stream_time)
-                diff = float(data_time) - float(stream_time)
-
+                # else:
                 #     stream_time = 0
-                #     print("still waiting")
-                # stream_time = pygame.mixer.music.get_pos()
+                data_time = input_value[:input_value.find(',')]
+                #print("data time is" + str(data_time))
+                #print("media time is ", stream_time)
+                #print('data time is ', data_time)
+                stream_time = (stream.get_time() - difference) - initial_time
+                diff = float(data_time) - float(stream_time)
+                #print('data time is ', data_time)
+                #print('stream time is', stream_time)
+                while abs(diff) >= 0.2 and float(stream_time) < float(data_time):
+                    stream_time = (stream.get_time() - difference)- initial_time
+                    #print("w_media time is" + str(stream_time/1000))
+                    #print("w_start time is" + str(start_time))
+                    #print("waiting and media time is " + str(stream_time/1000))
+                    # if pygame.mixer.music.get_busy():
+                    #     print("waiting in loop")
+                    #     stream_time = pygame.mixer.music.get_pos()
+                    #     print("media time is ", stream_time)
+                    diff = float(data_time) - float(stream_time)
+
+                    #     stream_time = 0
+                    #     print("still waiting")
+                    # stream_time = pygame.mixer.music.get_pos()
 
 
-            input_value = (input_value[input_value.find(',')+1:])
-            #print(time.time())
-            #check this is the last release
-            #print('value is ', input_value)
-            if(acquired_flag and (float(previous_read) - float(input_value) >=1)):
-                print('release', data_time)
-                #output_serial.write(str(0).encode())
-                #output_serial.readline().decode()
-                if surveyMode and releaseFlag is False:
-                    pause()
-                    #isPlaying = False
-                    survey()
-                while(float(previous_read) > float(input_value)):
-                    #print('previous is ', previous_read)
-                    #print('current is ', input_value)
-                    del data[0]
-                    previous_read = input_value
-                    input_value = data[0]
-                    input_value = (input_value[input_value.find(',')+1:])
-                    data_time = input_value[:input_value.find(',')]
-                    print('wait')
+                input_value = (input_value[input_value.find(',')+1:])
+                #print(time.time())
+                #check this is the last release
+                #print('value is ', input_value)
+                if(acquired_flag and (float(previous_read) - float(input_value) >=1)):
+                    print('release', data_time)
+                    #output_serial.write(str(0).encode())
+                    #output_serial.readline().decode()
+                    if surveyMode and releaseFlag is False:
+                        pause()
+                        #isPlaying = False
+                        survey()
+                    while(float(previous_read) > float(input_value)):
+                        #print('previous is ', previous_read)
+                        #print('current is ', input_value)
+                        del data[0]
+                        previous_read = input_value
+                        input_value = data[0]
+                        input_value = (input_value[input_value.find(',')+1:])
+                        data_time = input_value[:input_value.find(',')]
+                        print('wait')
 
-                        #print("released data time is" + str(data_time))
-                    releaseFlag = True
-                acquired_flag = False
-            if( float(input_value) >= soft_value-10 and float(input_value) < medium_value  ):
-                print("soft squeeze")
-                initial_read = (input_value)
-                #output_serial.write(str(1).encode())
-                #output_serial.readline().decode()
-                acquired_flag = True
-                releaseFlag = False
-            elif( float(input_value) >= medium_value and float(input_value) <hard_value ):
-                print("medium squeeze", input_value, " ", data_time)
-                initial_read = (input_value)
-                #output_serial.write(str(2).encode())
-                #output_serial.readline().decode()
-                acquired_flag = True
-                releaseFlag = False
-            elif( float(input_value) >= hard_value):
-                print("hard squeeze", input_value, " ", stream_time)
-                initial_read = float(input_value)
-                #output_serial.write(str(3).encode())
-                #output_serial.readline().decode()
-                acquired_flag = True
-                releaseFlag = False
-            previous_read = float(input_value)
-            del data[0]
+                            #print("released data time is" + str(data_time))
+                        releaseFlag = True
+                    acquired_flag = False
+                if( float(input_value) >= soft_value-10 and float(input_value) < medium_value  ):
+                    print("soft squeeze")
+                    initial_read = (input_value)
+                    #output_serial.write(str(1).encode())
+                    #output_serial.readline().decode()
+                    acquired_flag = True
+                    releaseFlag = False
+                elif( float(input_value) >= medium_value and float(input_value) <hard_value ):
+                    print("medium squeeze", input_value, " ", data_time)
+                    initial_read = (input_value)
+                    #output_serial.write(str(2).encode())
+                    #output_serial.readline().decode()
+                    acquired_flag = True
+                    releaseFlag = False
+                elif( float(input_value) >= hard_value):
+                    print("hard squeeze", input_value, " ", stream_time)
+                    initial_read = float(input_value)
+                    #output_serial.write(str(3).encode())
+                    #output_serial.readline().decode()
+                    acquired_flag = True
+                    releaseFlag = False
+                previous_read = float(input_value)
+                del data[0]
         # else:
         #print("reached EOF")
             #print("isplaying is false")
@@ -367,7 +370,7 @@ def generate():
             stop()
             #output_serial.write(str(0).encode())
             #output_serial.readline().decode()
-            break
+        break
 
 def sample():
     output_serial.write(str(4).encode())
@@ -807,6 +810,7 @@ stop_music.pack()
 pause_music = tk.Button(root, text = "pause", command = pause)
 pause_music.place(relx=.5, rely=1.5, anchor="center")
 pause_music.pack()
+rec_data = []
 while True:
 
     # a.encode('utf-8').strip()
@@ -823,6 +827,7 @@ while True:
         while isPlaying and surveyMode is False:
             print('in this while')
             if stream.is_active():
+
                 print('in if statement')
 
                 '''value = (input_serial.readline().decode())
@@ -841,14 +846,16 @@ while True:
                         input_value = float(value) + offset
                 '''
                 input_value = 500
-                time = (stream.get_time() - difference) - initial_time
-                message =str(time) + "," + str(input_value)
+                stream_time = (stream.get_time() - difference) - initial_time
+                message =str(stream_time) + "," + str(input_value)
                 message= message.replace("\n", "")
-                data.append(message)
+                rec_data.append(message)
                 print('this is being appended ', message)
                 print(touchFile)
-                #csv_writer(data, touchFile)
+                #csv_writer(rec_data, touchFile)
                 root.update()
+            else:
+                stop()
 
 
             #data = [time,input_value]
