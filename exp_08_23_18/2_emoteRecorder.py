@@ -20,6 +20,7 @@ difference = 0.0
 root = tk.Tk()
 isPlaying = False
 path=""
+replay = False
 #Niloofar's computer
 #input_serial = serial.Serial('/dev/cu.usbmodem14431')
 #Angela's computer
@@ -259,7 +260,8 @@ def generate():
     global previous_read
     global isPlaying
     global stream_time
-    global data_time, touchFile, surveyMode, difference
+    global data_time, touchFile, surveyMode, difference, replay
+    replay = True
     start_time = 0
     data = []
     print('touch file is ', touchFile)
@@ -280,11 +282,7 @@ def generate():
         print('is playing is ', isPlaying)
         while(isPlaying and len(data) >0):
             root.update()
-            print('test1')
-
             if isPlaying:
-                print('test2')
-
                 input_value = data[0]
                 last_value = data[-1]
 
@@ -300,15 +298,12 @@ def generate():
             #print("data time is" + str(data_time))
             #print("media time is ", stream_time)
             #print('data time is ', data_time)
-                print('hi')
                 stream_time = (stream.get_time() - difference) - initial_time
                 diff = float(data_time) - float(stream_time)
                 #print('data time is ', data_time)
                 #print('stream time is', stream_time)
                 while abs(diff) >= 0.2 and float(stream_time) < float(data_time):
-                    print('test3')
                     stream_time = (stream.get_time() - difference)- initial_time
-                    print(stream_time)
                     #print("w_media time is" + str(stream_time/1000))
                     #print("w_start time is" + str(start_time))
                     #print("waiting and media time is " + str(stream_time/1000))
@@ -793,7 +788,10 @@ def play():
 
 def stop():
     global stream, isPlaying
-    stream.stop_stream()
+    print('in stop function')
+    print ('is playing is ', isPlaying)
+    if isPlaying:
+        stream.stop_stream()
     isPlaying = False
     print('stopped')
     stream.close()
@@ -833,7 +831,7 @@ def recv_mode():
     csv_writer_append(["Media Time", "Sympathetic", "Fear", "Loving", "Anger", "Disgust", "Surprise","Other"], path + str(touchFile))
 
 
-sending = tk.Button(root, text = "send mode", command = stop)
+sending = tk.Button(root, text = "send mode", command = send_mode)
 sending.place(relx=.5, rely=1.5, anchor="center")
 sending.pack()
 recv = tk.Button(root, text = "receive mode", command = recv_mode)
@@ -842,7 +840,6 @@ recv.pack()
 rec_data = []
 
 demog()
-
 while True:
 
     # a.encode('utf-8').strip()
@@ -856,7 +853,7 @@ while True:
     print(input_value)
     '''
     if receive_Mode == False:
-        while isPlaying and surveyMode is False:
+        while isPlaying and replay is False:
             print('in this while')
             if stream.is_active():
 
@@ -884,7 +881,7 @@ while True:
                 rec_data.append(message)
                 print('this is being appended ', message)
                 print(touchFile)
-                #csv_writer(rec_data, touchFile)
+                csv_writer(rec_data, touchFile)
                 root.update()
             else:
                 stop()
