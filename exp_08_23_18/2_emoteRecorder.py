@@ -22,7 +22,7 @@ isPlaying = False
 #Niloofar's computer
 #input_serial = serial.Serial('/dev/cu.usbmodem14431')
 #Angela's computer
-
+'''
 input_serial = serial.Serial('/dev/cu.usbmodem1421')
 
 input_serial.setBaudrate(115200)
@@ -36,7 +36,7 @@ output_serial.setBaudrate(115200)
 output_serial.setDTR(False)
 output_serial.setRTS(False)
 #server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
+'''
 #IP_address = str(sys.argv[1])
 #Port = int(sys.argv[2])server.connect(("localhost", 5000))
 start_time = 0
@@ -254,7 +254,7 @@ def load_settings():
     print('soft is ', soft_value, ' medium is ', medium_value, ' hard is ', hard_value)
 
 def generate():
-    global acquired_flag, soft_value, medium_value, hard_value, start_time
+    global acquired_flag, soft_value, medium_value, hard_value, start_time, initial_time
     global previous_read
     global isPlaying
     global stream_time
@@ -271,6 +271,7 @@ def generate():
     releaseFlag = True
     media_list = []
     play()
+    difference = 0.0
     initial_time = stream.get_time()
     while True:
         root.update()
@@ -316,11 +317,11 @@ def generate():
             #print('value is ', input_value)
             if(acquired_flag and (float(previous_read) - float(input_value) >=1)):
                 print('release', data_time)
-                output_serial.write(str(0).encode())
-                output_serial.readline().decode()
+                #output_serial.write(str(0).encode())
+                #output_serial.readline().decode()
                 if surveyMode and releaseFlag is False:
                     pause()
-                    isPlaying = False
+                    #isPlaying = False
                     survey()
                 while(float(previous_read) > float(input_value)):
                     #print('previous is ', previous_read)
@@ -330,6 +331,7 @@ def generate():
                     input_value = data[0]
                     input_value = (input_value[input_value.find(',')+1:])
                     data_time = input_value[:input_value.find(',')]
+                    print('wait')
 
                         #print("released data time is" + str(data_time))
                     releaseFlag = True
@@ -337,22 +339,22 @@ def generate():
             if( float(input_value) >= soft_value-10 and float(input_value) < medium_value  ):
                 print("soft squeeze")
                 initial_read = (input_value)
-                output_serial.write(str(1).encode())
-                output_serial.readline().decode()
+                #output_serial.write(str(1).encode())
+                #output_serial.readline().decode()
                 acquired_flag = True
                 releaseFlag = False
             elif( float(input_value) >= medium_value and float(input_value) <hard_value ):
                 print("medium squeeze", input_value, " ", data_time)
                 initial_read = (input_value)
-                output_serial.write(str(2).encode())
-                output_serial.readline().decode()
+                #output_serial.write(str(2).encode())
+                #output_serial.readline().decode()
                 acquired_flag = True
                 releaseFlag = False
             elif( float(input_value) >= hard_value):
                 print("hard squeeze", input_value, " ", stream_time)
                 initial_read = float(input_value)
-                output_serial.write(str(3).encode())
-                output_serial.readline().decode()
+                #output_serial.write(str(3).encode())
+                #output_serial.readline().decode()
                 acquired_flag = True
                 releaseFlag = False
             previous_read = float(input_value)
@@ -363,8 +365,8 @@ def generate():
         if len(data)<=0:
             print('end of touches')
             stop()
-            output_serial.write(str(0).encode())
-            output_serial.readline().decode()
+            #output_serial.write(str(0).encode())
+            #output_serial.readline().decode()
             break
 
 def sample():
@@ -464,6 +466,7 @@ def submit_response():
     pause()
     surveyFlag = True
     print('survey flag is ', surveyFlag)
+
 def release():
     output_serial.write(str(9).encode())
     output_serial.readline().decode()
@@ -765,11 +768,12 @@ else:
 # csv_writer_append(["Media Time", "Sympathetic", "Fear", "Loving", "Anger", "Disgust", "Surprise","Other"], path + str(touchFile)+ "_Responses.csv")
 def callback(in_data, frame_count, time_info, status):
     data = wave.readframes(frame_count)
+
     return (data, pyaudio.paContinue)
 def play():
-    global stream, isPlaying
+    global stream, isPlaying, initial_time
     isPlaying = True
-
+    wave.rewind()
     stream = py_audio.open(format=py_audio.get_format_from_width(wave.getsampwidth()),
                        channels=wave.getnchannels(),
                        rate=wave.getframerate(),
@@ -777,16 +781,17 @@ def play():
                        stream_callback = callback)
 
 def stop():
-    global difference, stream, isPlaying
+    global stream, isPlaying
     stream.stop_stream()
     isPlaying = False
     print('stopped')
     stream.close()
 
 def pause():
-    global difference, paused, isPlaying
+    global difference, paused, isPlaying, stream_time, initial_time
     if paused:
-        difference = stream.get_time()
+        p_time = stream.get_time() - initial_time
+        difference = p_time - stream_time
         stream.start_stream()
         print('resume')
         paused = False
@@ -806,41 +811,45 @@ while True:
 
     # a.encode('utf-8').strip()
     root.update()
-    value = (input_serial.readline().decode())
+    '''value = (input_serial.readline().decode())
     try:
         input_value = float(value) + offset
     except:
         value = (input_serial.readline().decode())
         input_value = float(value) + offset
     print(input_value)
-    if isPlaying and surveyMode is False:
-            #print('sending to csv!')
-            while stream.is_active():
-                if receive_Mode == False:
+    '''
+    if receive_Mode == False:
+        while isPlaying and surveyMode is False:
+            print('in this while')
+            if stream.is_active():
+                print('in if statement')
+
+                '''value = (input_serial.readline().decode())
+                try:
+                    input_value = float(value) + offset
+                except:
                     value = (input_serial.readline().decode())
+                    input_value = float(value) + offset
+                print(input_value)
+                if input_value <-3:
+                    offset = offset -input_value
                     try:
                         input_value = float(value) + offset
                     except:
                         value = (input_serial.readline().decode())
                         input_value = float(value) + offset
-                    print(input_value)
-                    if input_value <-3:
-                        offset = offset -input_value
-                        try:
-                            input_value = float(value) + offset
-                        except:
-                            value = (input_serial.readline().decode())
-                            input_value = float(value) + offset
+                '''
+                input_value = 500
+                time = (stream.get_time() - difference) - initial_time
+                message =str(time) + "," + str(input_value)
+                message= message.replace("\n", "")
+                data.append(message)
+                print('this is being appended ', message)
+                print(touchFile)
+                #csv_writer(data, touchFile)
+                root.update()
 
-                    time = (stream.get_time() - difference) - initial_time
-                    message =str(time) + "," + str(input_value)
-                    message= message.replace("\n", "")
-                    data.append(message)
-                    print('this is being appended ', message)
-                    print(touchFile)
-                    csv_writer(data, touchFile)
-                    root.update()
-            stream.stop_stream()
 
             #data = [time,input_value]
             #print(data)
