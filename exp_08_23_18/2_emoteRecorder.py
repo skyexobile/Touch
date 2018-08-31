@@ -13,7 +13,7 @@ import mutagen
 import tkinter.messagebox
 import pyaudio, wave
 
-wave = wave.open('output.wav', 'rb')
+wave = wave.open('Emotional music/DataFIles/5/happy2.wav', 'rb')
 py_audio = pyaudio.PyAudio()
 paused = False
 difference = 0.0
@@ -27,7 +27,7 @@ input_serial = serial.Serial('/dev/cu.usbmodem1421')
 
 input_serial.setBaudrate(115200)
 print("Connected to Sensor")
-'''
+
 #Niloofar's computer
 #output_serial = serial.Serial('/dev/cu.usbmodem14411')
 output_serial = serial.Serial('/dev/cu.usbmodem1411')
@@ -36,7 +36,7 @@ output_serial.setBaudrate(115200)
 output_serial.setDTR(False)
 output_serial.setRTS(False)
 #server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-'''
+
 #IP_address = str(sys.argv[1])
 #Port = int(sys.argv[2])server.connect(("localhost", 5000))
 start_time = 0
@@ -316,8 +316,8 @@ def generate():
             #print('value is ', input_value)
             if(acquired_flag and (float(previous_read) - float(input_value) >=1)):
                 print('release', data_time)
-                #output_serial.write(str(0).encode())
-                #output_serial.readline().decode()
+                output_serial.write(str(0).encode())
+                output_serial.readline().decode()
                 if surveyMode and releaseFlag is False:
                     pause()
                     isPlaying = False
@@ -337,22 +337,22 @@ def generate():
             if( float(input_value) >= soft_value-10 and float(input_value) < medium_value  ):
                 print("soft squeeze")
                 initial_read = (input_value)
-                #output_serial.write(str(1).encode())
-                #output_serial.readline().decode()
+                output_serial.write(str(1).encode())
+                output_serial.readline().decode()
                 acquired_flag = True
                 releaseFlag = False
             elif( float(input_value) >= medium_value and float(input_value) <hard_value ):
                 print("medium squeeze", input_value, " ", data_time)
                 initial_read = (input_value)
-                #output_serial.write(str(2).encode())
-                #output_serial.readline().decode()
+                output_serial.write(str(2).encode())
+                output_serial.readline().decode()
                 acquired_flag = True
                 releaseFlag = False
             elif( float(input_value) >= hard_value):
                 print("hard squeeze", input_value, " ", stream_time)
                 initial_read = float(input_value)
-                #output_serial.write(str(3).encode())
-                #output_serial.readline().decode()
+                output_serial.write(str(3).encode())
+                output_serial.readline().decode()
                 acquired_flag = True
                 releaseFlag = False
             previous_read = float(input_value)
@@ -363,8 +363,8 @@ def generate():
         if len(data)<=0:
             print('end of touches')
             stop()
-            #output_serial.write(str(0).encode())
-            #output_serial.readline().decode()
+            output_serial.write(str(0).encode())
+            output_serial.readline().decode()
             break
 
 def sample():
@@ -781,7 +781,7 @@ def stop():
     stream.stop_stream()
     isPlaying = False
     print('stopped')
-    #stream.close()
+    stream.close()
 
 def pause():
     global difference, paused, isPlaying
