@@ -13,7 +13,7 @@ import mutagen
 import tkinter.messagebox
 import pyaudio, wave
 
-wave = wave.open('Emotional music/DataFIles/5/happy2.wav', 'rb')
+
 py_audio = pyaudio.PyAudio()
 paused = False
 difference = 0.0
@@ -21,23 +21,25 @@ root = tk.Tk()
 isPlaying = False
 path=""
 replay = False
+touchFileDirectory2 = ""
+touchFileDirectory = ""
 #Niloofar's computer
-#input_serial = serial.Serial('/dev/cu.usbmodem14431')
+input_serial = serial.Serial('/dev/cu.usbmodem14641')
 #Angela's computer
 
-input_serial = serial.Serial('/dev/cu.usbmodem1421')
+# input_serial = serial.Serial('/dev/cu.usbmodem1421')
 
 input_serial.setBaudrate(115200)
 print("Connected to Sensor")
 
 #Niloofar's computer
-#output_serial = serial.Serial('/dev/cu.usbmodem14411')
-output_serial = serial.Serial('/dev/cu.usbmodem1411')
+output_serial = serial.Serial('/dev/cu.usbmodem14631')
+# output_serial = serial.Serial('/dev/cu.usbmodem1411')
 output_serial.setBaudrate(115200)
 #
 output_serial.setDTR(False)
 output_serial.setRTS(False)
-#server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+# server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 #IP_address = str(sys.argv[1])
 #Port = int(sys.argv[2])server.connect(("localhost", 5000))
@@ -230,7 +232,7 @@ def save_settings():
         med_value = hard_value
         hard_value = temp
     medium_value = med_value
-    csv_writer([soft_value, medium_value, hard_value],"Emotional music/DataFiles/" + PID_value+"/Settings.csv")
+    csv_writer([soft_value, medium_value, hard_value],"EmotionalMusic/DataFiles/" + PID_value+"/Settings.csv")
     print("Your settings have been saved!")
     '''print("soft is ", soft_value)
     print("medium is ", medium_value)
@@ -240,7 +242,7 @@ def save_settings():
 def load_settings():
     global soft_value, medium_value, hard_value, PID_value
     settings = []
-    with open("Emotional music/DataFiles/" + PID_value + "/Settings.csv") as csv_file:
+    with open("EmotionalMusic/DataFiles/" + PID_value+"/Settings.csv") as csv_file:
         reader = csv.reader(csv_file, delimiter = '\n')
         #Here is where you should be reading through the file and sending values to output serial
         for row in reader:
@@ -265,7 +267,7 @@ def generate():
     start_time = 0
     data = []
     print('touch file is ', touchFile)
-    with open(touchFile) as csv_file:
+    with open(touchFileDirectory2) as csv_file:
         reader = csv.reader(csv_file, delimiter = '\n')
         #Here is where you should be reading through the file and sending values to output serial
         for row in reader:
@@ -493,11 +495,11 @@ def survey(): # new window definition
     #submit_button.pack()
 def submit_response():
     global Sympathetic, Fear,Loving,Anger, Disgust,Surprise,newwin, E_value, isPlaying
-    global survey_response, stream_time, PID_value, touchFile, surveyFlag
+    global survey_response, stream_time, PID_value, touchFile, surveyFlag, touchFileDirectory
     e_value =E_value.get()
     if e_value == "":
         e_value = "None"
-    csv_writer_append([stream_time,Sympathetic.get(), Fear.get(),Loving.get(),Anger.get(), Disgust.get(),Surprise.get(),e_value], path + str(touchFile))
+    csv_writer_append([stream_time,Sympathetic.get(), Fear.get(),Loving.get(),Anger.get(), Disgust.get(),Surprise.get(),e_value], touchFileDirectory)
     newwin.destroy()
 
     surveyFlag = True
@@ -625,13 +627,17 @@ def directorychooser():
  global touchFile, PID_value
  global path2
  global first_time
-    #count=0
- if first_time:
-    first_time = False
-    load_settings()
- # load_settings()
+ global wave
+ global touchFileDirectory, touchFileDirectory2
+ global directory
+
+ script_dir = os.path.dirname(os.path.abspath(__file__))
  directory = askdirectory()
  print(directory)
+
+ # if first_time:
+ #     first_time = False
+ #     load_settings(directory)
  if(directory):
     count=0
     index=0
@@ -641,20 +647,21 @@ def directorychooser():
     del touchFileNames[:]
     os.chdir(directory)
     for files in os.listdir(directory):
-      if files.endswith('.mp3'):
+      if files.endswith('.wav'):
+          print("files is ", files)
+          print("***script_dir is ", script_dir)
           realdir = os.path.realpath(files)
+          print("***realdir is ", realdir)
+          relPath = realdir.replace(script_dir, '')
+          print("***relPath is ", relPath)
           fileName = os.path.splitext(files)[0]
           touchFileName = fileName + '.csv'
-          try:
-              audio = EasyID3(realdir)
-          except mutagen.id3.ID3NoHeaderError:
-              audio = mutagen.File(realdir, easy=True)
-              audio.add_tags()
-          realnames.append(audio.get('TIT2', 'No Title'))
-          listofsongs.append(files)
+          realnames.append(fileName)
+          listofsongs.append(realdir)
           touchFileNames.append(touchFileName)
       else:
         print(files+" is not a song")
+    os.chdir(script_dir)
     print(listofsongs)
     if listofsongs == [] :
        okay=tkinter.messagebox.askretrycancel("No songs found","no songs")
@@ -663,35 +670,25 @@ def directorychooser():
     else:
         listbox.delete(0, tk.END)
         realnames.reverse()
-        #pygame.mixer.music.load(listofsongs[0])
+        wave = wave.open(listofsongs[0], "rb")
+        # print("****here1")
         touchFile = touchFileNames[0]
 
-        #csv_writer(["Media Time,Sympathetic,Fear,Loving,Anger,Disgust,Surprise,Other", path + str(touchFile))
-        print("touchfile is set")
+        touchFileDirectory2 = directory + "/" + str(touchFile)
+        # print("****touchFileDirectory is ", touchFileDirectory)
+        # print("****here2" + directory + "/" + path + str(touchFile))
+        #csv_writer(["Media Time,Sympathetic,Fear,Loving,Anger,Disgust,Surprise,Other"],touchFileDirectory)
+        # print("touchfile is set")
         for items in realnames:
             listbox.insert(0, items)
         for i in listofsongs:
             count = count + 1
-
-        # realdir = os.path.realpath(listofsongs[0])
-        # audio = ID3(realdir)
-        # freq = audio.info.sample_rate
-        # pygame.mixer.init(22050, -16, 2)
-        # print(pygame.mixer.get_init())
-
-        # pygame.mixer.music.play()
         try:
             updatelabel()
         except NameError:
             print("")
  else:
     return 1
-
-# try:
-#     directorychooser()
-# except OSError as e:
-#          print("thank you")
-
 
 def call(event):
     try:
@@ -707,13 +704,6 @@ songlabel.pack()
 
 
 
-# submit = tk.Button(root, text="Enter", command = Squeeze)
-# submit.place(relx=.5, rely=1.5, anchor="center")
-# label1.pack()
-# E1.pack()
-# label2.pack()
-# E2.pack()
-# submit.pack(side = tk.TOP)
 root.update()
 
 print('Time: ' + str(time.strftime("%X")))
@@ -833,21 +823,20 @@ def pause():
     isPlaying = False
 
 def send_mode():
-    global receive_Mode, path, touchFile
+    global receive_Mode, path, touchFile, touchFileDirectory, directory
     receive_Mode = False
     print('sending mode')
-
     path= "intention_"
-    csv_writer_append(["Media Time", "Sympathetic", "Fear", "Loving", "Anger", "Disgust", "Surprise","Other"], path + str(touchFile))
-
-
+    touchFileDirectory = directory + "/" + path + str(touchFile)
+    csv_writer(["Media Time,Sympathetic,Fear,Loving,Anger,Disgust,Surprise,Other"],touchFileDirectory)
 
 def recv_mode():
-    global receive_Mode, path, touchFile
+    global receive_Mode, path, touchFile, directory, touchFileDirectory
     receive_Mode = True
     print('receiving mode')
     path = "perception_"
-    csv_writer_append(["Media Time", "Sympathetic", "Fear", "Loving", "Anger", "Disgust", "Surprise","Other"], path + str(touchFile))
+    touchFileDirectory = directory + "/" + path + str(touchFile)
+    csv_writer(["Media Time,Sympathetic,Fear,Loving,Anger,Disgust,Surprise,Other"],touchFileDirectory)
 
 
 sending = tk.Button(root, text = "send mode", command = send_mode)
@@ -856,6 +845,8 @@ sending.pack()
 recv = tk.Button(root, text = "receive mode", command = recv_mode)
 recv.place(relx=.5, rely=1.5, anchor="center")
 recv.pack()
+load_button = tk.Button(root, text = "load settings", command = load_settings)
+load_button.pack()
 rec_data = []
 
 demog()
@@ -898,7 +889,7 @@ while True:
                 rec_data.append(message)
                 print('this is being appended ', message)
                 print(touchFile)
-                csv_writer(rec_data, touchFile)
+                csv_writer(rec_data, touchFileDirectory2)
                 root.update()
             else:
 
