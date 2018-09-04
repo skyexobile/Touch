@@ -24,6 +24,7 @@ replay = False
 touchFileDirectory2 = ""
 touchFileDirectory = ""
 #Niloofar's computer
+'''
 input_serial = serial.Serial('/dev/cu.usbmodem14641')
 #Angela's computer
 
@@ -40,7 +41,7 @@ output_serial.setBaudrate(115200)
 output_serial.setDTR(False)
 output_serial.setRTS(False)
 # server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
+'''
 #IP_address = str(sys.argv[1])
 #Port = int(sys.argv[2])server.connect(("localhost", 5000))
 start_time = 0
@@ -266,6 +267,7 @@ def generate():
     replay = True
     start_time = 0
     data = []
+    surveyCounter = 0
     print('touch file is ', touchFile)
     with open(touchFileDirectory2) as csv_file:
         reader = csv.reader(csv_file, delimiter = '\n')
@@ -310,6 +312,8 @@ def generate():
                 #print('stream time is', stream_time)
                 while abs(diff) >= 0.2 and float(stream_time) < float(data_time):
                     stream_time = (stream.get_time() - difference)- initial_time
+                    if surveyCounter == 0:
+                        timeout = stream_time +5
                     #print("w_media time is" + str(stream_time/1000))
                     #print("w_start time is" + str(start_time))
                     #print("waiting and media time is " + str(stream_time/1000))
@@ -329,13 +333,21 @@ def generate():
                 #check this is the last release
                 #print('value is ', input_value)
                 if(acquired_flag and (float(previous_read) - float(input_value) >=1)):
-                    print('release', data_time)
-                    output_serial.write(str(0).encode())
-                    output_serial.readline().decode()
+                    print('release', surveyCounter)
+
+                    #output_serial.write(str(0).encode())
+                    #output_serial.readline().decode()
+                    if surveyCounter == 0:
+                        timeout = stream_time + 5
+
                     if surveyMode and releaseFlag is False:
-                        pause()
+                        surveyCounter +=1
                         #isPlaying = False
-                        survey()
+                        if surveyCounter ==1 or stream_time >= timeout:
+                            pause()
+                            survey()
+                            if stream_time >= timeout:
+                                surveyCounter = 0
                         stream_time = (stream.get_time() - initial_time) - difference
                     while(float(previous_read) > float(input_value) and len(data)>0):
                         #print('previous is ', previous_read)
@@ -364,24 +376,24 @@ def generate():
                         releaseFlag = True
                     acquired_flag = False
                 if( float(input_value) >= soft_value-10 and float(input_value) < medium_value  ):
-                    print("soft squeeze")
+                    #print("soft squeeze")
                     initial_read = (input_value)
-                    output_serial.write(str(1).encode())
-                    output_serial.readline().decode()
+                    #output_serial.write(str(1).encode())
+                    #output_serial.readline().decode()
                     acquired_flag = True
                     releaseFlag = False
                 elif( float(input_value) >= medium_value and float(input_value) <hard_value ):
-                    print("medium squeeze", input_value, " ", data_time)
+                    #print("medium squeeze", input_value, " ", data_time)
                     initial_read = (input_value)
-                    output_serial.write(str(2).encode())
-                    output_serial.readline().decode()
+                    #output_serial.write(str(2).encode())
+                    #output_serial.readline().decode()
                     acquired_flag = True
                     releaseFlag = False
                 elif( float(input_value) >= hard_value):
-                    print("hard squeeze", input_value, " ", stream_time)
+                    #print("hard squeeze", input_value, " ", stream_time)
                     initial_read = float(input_value)
-                    output_serial.write(str(3).encode())
-                    output_serial.readline().decode()
+                    #output_serial.write(str(3).encode())
+                    #output_serial.readline().decode()
                     acquired_flag = True
                     releaseFlag = False
                 previous_read = float(input_value)
@@ -392,8 +404,8 @@ def generate():
         if len(data)<=0:
             print('end of touches')
             stop()
-            output_serial.write(str(0).encode())
-            output_serial.readline().decode()
+            #output_serial.write(str(0).encode())
+            #output_serial.readline().decode()
             break
 
 def sample():
@@ -854,7 +866,7 @@ while True:
 
     # a.encode('utf-8').strip()
     root.update()
-    value = (input_serial.readline().decode())
+    '''value = (input_serial.readline().decode())
     try:
         input_value = float(value) + offset
     except:
@@ -901,7 +913,7 @@ while True:
             #print(data)
             #csv_writer(data,'touches.csv')
 
-
+        '''
 
         #server.send(message.encode())
 
