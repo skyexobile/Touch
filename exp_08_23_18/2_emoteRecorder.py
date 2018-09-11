@@ -24,7 +24,7 @@ replay = False
 touchFileDirectory2 = ""
 touchFileDirectory = ""
 #Niloofar's computer
-'''
+
 input_serial = serial.Serial('/dev/cu.usbmodem14641')
 #Angela's computer
 
@@ -41,7 +41,7 @@ output_serial.setBaudrate(115200)
 output_serial.setDTR(False)
 output_serial.setRTS(False)
 # server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-'''
+
 #IP_address = str(sys.argv[1])
 #Port = int(sys.argv[2])server.connect(("localhost", 5000))
 start_time = 0
@@ -335,19 +335,19 @@ def generate():
                 if(acquired_flag and (float(previous_read) - float(input_value) >=1)):
                     print('release', surveyCounter)
 
-                    #output_serial.write(str(0).encode())
-                    #output_serial.readline().decode()
+                    output_serial.write(str(0).encode())
+                    output_serial.readline().decode()
                     if surveyCounter == 0:
                         timeout = stream_time + 5
 
                     if surveyMode and releaseFlag is False:
-                        surveyCounter +=1
                         #isPlaying = False
-                        if surveyCounter ==1 or stream_time >= timeout:
+                        if surveyCounter%5==0:
                             pause()
                             survey()
-                            if stream_time >= timeout:
-                                surveyCounter = 0
+                            # if stream_time >= timeout:
+                            #     surveyCounter = 0
+                        surveyCounter +=1
                         stream_time = (stream.get_time() - initial_time) - difference
                     while(float(previous_read) > float(input_value) and len(data)>0):
                         #print('previous is ', previous_read)
@@ -378,22 +378,22 @@ def generate():
                 if( float(input_value) >= soft_value-10 and float(input_value) < medium_value  ):
                     #print("soft squeeze")
                     initial_read = (input_value)
-                    #output_serial.write(str(1).encode())
-                    #output_serial.readline().decode()
+                    output_serial.write(str(1).encode())
+                    output_serial.readline().decode()
                     acquired_flag = True
                     releaseFlag = False
                 elif( float(input_value) >= medium_value and float(input_value) <hard_value ):
                     #print("medium squeeze", input_value, " ", data_time)
                     initial_read = (input_value)
-                    #output_serial.write(str(2).encode())
-                    #output_serial.readline().decode()
+                    output_serial.write(str(2).encode())
+                    output_serial.readline().decode()
                     acquired_flag = True
                     releaseFlag = False
                 elif( float(input_value) >= hard_value):
                     #print("hard squeeze", input_value, " ", stream_time)
                     initial_read = float(input_value)
-                    #output_serial.write(str(3).encode())
-                    #output_serial.readline().decode()
+                    output_serial.write(str(3).encode())
+                    output_serial.readline().decode()
                     acquired_flag = True
                     releaseFlag = False
                 previous_read = float(input_value)
@@ -404,8 +404,8 @@ def generate():
         if len(data)<=0:
             print('end of touches')
             stop()
-            #output_serial.write(str(0).encode())
-            #output_serial.readline().decode()
+            output_serial.write(str(0).encode())
+            output_serial.readline().decode()
             break
 
 def sample():
@@ -866,7 +866,7 @@ while True:
 
     # a.encode('utf-8').strip()
     root.update()
-    '''value = (input_serial.readline().decode())
+    value = (input_serial.readline().decode())
     try:
         input_value = float(value) + offset
     except:
@@ -913,7 +913,7 @@ while True:
             #print(data)
             #csv_writer(data,'touches.csv')
 
-        '''
+
 
         #server.send(message.encode())
 
