@@ -25,17 +25,17 @@ touchFileDirectory2 = ""
 touchFileDirectory = ""
 #Niloofar's computer
 
-input_serial = serial.Serial('/dev/cu.usbmodem14641')
+#input_serial = serial.Serial('/dev/cu.usbmodem14641')
 #Angela's computer
 
-# input_serial = serial.Serial('/dev/cu.usbmodem1421')
+input_serial = serial.Serial('/dev/cu.usbmodem1411')
 
 input_serial.setBaudrate(115200)
 print("Connected to Sensor")
 
 #Niloofar's computer
-output_serial = serial.Serial('/dev/cu.usbmodem14631')
-# output_serial = serial.Serial('/dev/cu.usbmodem1411')
+#output_serial = serial.Serial('/dev/cu.usbmodem14631')
+output_serial = serial.Serial('/dev/cu.usbmodem1421')
 output_serial.setBaudrate(115200)
 #
 output_serial.setDTR(False)
@@ -342,7 +342,7 @@ def generate():
 
                     if surveyMode and releaseFlag is False:
                         #isPlaying = False
-                        if surveyCounter%5==0:
+                        if surveyCounter%7==0:
                             pause()
                             survey()
                             # if stream_time >= timeout:
@@ -404,17 +404,18 @@ def generate():
         if len(data)<=0:
             print('end of touches')
             stop()
-            output_serial.write(str(0).encode())
-            output_serial.readline().decode()
             break
 
-def sample():
+def sample_soft():
     output_serial.write(str(4).encode())
     output_serial.readline().decode()
+def sample_medium():
     output_serial.write(str(5).encode())
     output_serial.readline().decode()
+def sample_hard():
     output_serial.write(str(6).encode())
     output_serial.readline().decode()
+
 
 def submit_demo():
     global demo_win, gender, role
@@ -528,8 +529,13 @@ hard_button  =  tk.Button(root, text = "Define Hard", command = set_hard)
 save_button  =  tk.Button(root, text = "Save Settings", command = save_settings)
 playback_button  =  tk.Button(root, text = "Replay Touches", command = generate)
 sMode_button = tk.Button(root, text = "Survey Mode", command = toSurvey)
-sample_button = tk.Button(root, text = "Sample Squeezes", command = sample)
+sample_soft_button = tk.Button(root, text = "Sample soft Squeezes", command = sample_soft)
+sample_hard_button = tk.Button(root, text = "Sample hard Squeezes", command = sample_hard)
+sample_medium_button = tk.Button(root, text = "Sample medium Squeezes", command = sample_medium)
 release_button = tk.Button(root, text = "Release", command = release)
+sample_soft_button.pack()
+sample_hard_button.pack()
+sample_medium_button.pack()
 release_button.pack()
 reset_button.pack(side = tk.BOTTOM)
 soft_button.pack(side = tk.BOTTOM)
@@ -538,7 +544,7 @@ hard_button.pack(side = tk.BOTTOM)
 save_button.pack(side = tk.BOTTOM)
 playback_button.pack()
 sMode_button.pack()
-sample_button.pack()
+
 listofsongs=[]
 realnames = []
 touchFileNames = []
@@ -815,6 +821,8 @@ def stop():
         stream.stop_stream()
     isPlaying = False
     print('stopped')
+    output_serial.write(str(0).encode())
+    output_serial.readline().decode()
     stream.close()
 
 def pause():
@@ -850,7 +858,8 @@ def recv_mode():
     touchFileDirectory = directory + "/" + path + str(touchFile)
     csv_writer(["Media Time,Sympathetic,Fear,Loving,Anger,Disgust,Surprise,Other"],touchFileDirectory)
 
-
+def reset_out():
+    output_serial.write(str(7).encode())
 sending = tk.Button(root, text = "send mode", command = send_mode)
 sending.place(relx=.5, rely=1.5, anchor="center")
 sending.pack()
@@ -861,6 +870,8 @@ load_button = tk.Button(root, text = "load settings", command = load_settings)
 load_button.pack()
 rec_data = []
 
+reset_output = tk.Button(root, text = "Reset Output", command = reset_out())
+reset_output.pack()
 demog()
 while True:
 
