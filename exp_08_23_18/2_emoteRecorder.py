@@ -28,14 +28,14 @@ touchFileDirectory = ""
 #input_serial = serial.Serial('/dev/cu.usbmodem14641')
 #Angela's computer
 
-input_serial = serial.Serial('/dev/cu.usbmodem1411')
+input_serial = serial.Serial('/dev/cu.usbmodem14431')
 
 input_serial.setBaudrate(115200)
 print("Connected to Sensor")
 
 #Niloofar's computer
-#output_serial = serial.Serial('/dev/cu.usbmodem14631')
-output_serial = serial.Serial('/dev/cu.usbmodem1421')
+output_serial = serial.Serial('/dev/cu.usbmodem14441')
+# output_serial = serial.Serial('/dev/cu.usbmodem1421')
 output_serial.setBaudrate(115200)
 #
 output_serial.setDTR(False)
@@ -342,7 +342,7 @@ def generate():
 
                     if surveyMode and releaseFlag is False:
                         #isPlaying = False
-                        if surveyCounter%7==0:
+                        if surveyCounter%5==0:
                             pause()
                             survey()
                             # if stream_time >= timeout:
